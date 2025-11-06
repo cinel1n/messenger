@@ -1,10 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    {% load static %}
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+    <title>Registration</title>
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap"
+    />
+    <link rel="stylesheet" href="{% static 'css/mdb.min.css' %}"/>
 </head>
-<body>
 
+<div>
+    <div style="width: 25vw; margin: auto; margin-top: 10vh;">
+    <ul class="nav nav-pills nav-justified mb-3" id="ex1">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'log' %}">Login</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="{% url 'reg' %}">Register</a>
+        </li>
+    </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="pills-register" role="tabpanel" aria-labelledby="tab-register">
+                <form method="post">
+                    {% csrf_token %}
+
+
+                    {% for field in form %}
+
+                    {% if field.name != "data_entry" %}
+                    <div data-mdb-input-init class="form-outline mb-4">
+                        {{field}}
+                        <label class="form-label" for={{field.id_for_label}}>{{field.label}}</label>
+                    </div>
+                    {% else %}
+
+                    <div class="form-check d-flex justify-content-center mb-4">
+                        {{field}}
+
+                        <label class="form-check-label" for="{{field.name}}">
+                            {{field.label}}
+                        </label>
+                    </div>
+                    {% endif%}
+                    {% endfor %}
+                    <input type="submit" data-mdb-button-init data-mdb-ripple-init
+                           class="btn btn-primary btn-block mb-3"></input>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="{% static 'js/mdb.umd.min.js' %}"></script>
+<script type="text/javascript"></script>
 </body>
+
 </html>

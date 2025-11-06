@@ -1,0 +1,128 @@
+.users-messages, .chat{
+    padding: 1vw 1.5vw;
+}
+body nav.bg-body-tertiary {
+    background-color: #3b71ca !important;
+    color:white !important;
+
+}
+.navbar-brand, .navbar-nav .nav-link.active, .navbar-nav .nav-link.show{
+    color:white !important;
+}
+nav{
+    height: 6vh;
+}
+.user-messege{
+    display: flex;
+    font-size: 16px;
+    height:6vh;
+    flex-direction: row;
+    justify-content:flex-start;
+    margin-bottom: 1vh;
+}
+.user-current{
+    display: flex;
+    height:5vh;
+    border-radius: 7px;;
+    align-items: center;
+    text-align: center;
+    background-color: white;
+    margin-bottom: 0;
+}
+.input-group-text{
+    background-color: white;
+}
+.user-current h3{
+    margin-bottom: 0;
+}
+.users-messages{
+    display:flex;
+    flex-direction:column;
+    flex: 1;
+    overflow-y: auto;           /* Оставляем для функциональности */
+    overflow-x: hidden;
+    height: 90vh;             
+    position: relative;
+}
+.last-message{
+    max-width: 12vw;
+}
+.user-messege h3, .user-messege p{
+    margin-left:0.5vw;
+} 
+.chat{
+    display: flex;          
+    flex-direction: column;   
+    height: 94vh;             
+    position: relative;
+    padding: 1vw;
+    background-color: #f0f0f0;
+}
+
+.avatar-user{
+    height:4.5vh;
+    border-radius:3vw;
+}
+.last-message{
+    font-size: 0.8vw;
+}
+.name-user{
+    font-size: 0.9vw;
+}
+
+.chats{
+    display: flex;
+    padding: 0 15vw;
+    flex-direction: row;
+}
+
+.mes-1, .mes-2{
+    font-size: 0.9vw;
+    display: flex;
+    height:6vh;
+    margin-bottom:1vh;
+    flex-direction: row;
+}
+.mes-1 p{
+    margin-left:0.5vw;
+    max-width: 25vw;
+    background-color: white;
+    padding: 0.5vw 0.7vw ;
+    min-height: 4vh;
+    border-radius: 10px;
+    display: flex;        
+    align-items: center;
+    margin-bottom: 0;
+}
+.mes-me p{
+    background-color: #F5F5F5  ;
+}
+.text-block{
+    min-height: 3vw;
+}
+.mes-1 span{
+    font-size: 0.7vw;
+    color:#b2b2b2;
+    display: flex;
+    align-items:flex-end;
+    margin-left:5px;
+}
+.data{
+    width: 100%;
+    text-align: center;
+    margin: auto;
+    border-color:black;
+}
+.chat-mess {
+    flex: 1;
+    overflow-y: auto;           /* Оставляем для функциональности */
+    overflow-x: hidden;
+    
+    /* Скрытие скроллбара */
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* IE/Edge */
+}
+
+.chat-mess::-webkit-scrollbar {
+    display: none;              /* Chrome/Safari/Edge */
+}
