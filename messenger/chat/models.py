@@ -18,6 +18,7 @@ class Group(models.Model):
     def get_absolute_url(self):
         return reverse("group", args=[str(self.uuid)])
 
+
     def add_user_to_group(self, user: User):
         self.members.add(user)
         self.event_set.create(type="Join", user=user)
@@ -39,6 +40,9 @@ class Message(models.Model):
         date = self.timestamp.date()
         time = self.timestamp.time()
         return f"{self.author}:- {self.content} @{date} {time.hour}:{time.minute}"
+
+    def last_messenge(self):
+        return self.content
 
 
 class Event(models.Model):

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+Messenger
+{% endblock%}
+{% block content %}
+<div class="chats row">
+  <div class="users-messages col-3">
+
+    {% for group in groups %}
+    <a class="user-messege" id="{{group.uuid}}" href="chat/{{group.uuid}}" style="">
+      <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
+      <div>
+        <h3 class="name-user">{{ group.name}}</h3>
+        <p class="last-message text-truncate">Видел новый трейлер к фильму "Интерстеллар 2"? Выглядит эпично!</p>
+      </div>
+
+    </a>
+    {% endfor %}
+
+    </div>
+
+    <div class="chat col-9">
+        <div class="user-messege user-current">
+          <h3 class="name-user">Bob Smith</h3>
+
+        </div>
+
+
+      <div class="chat-mess" >
+        <h5 class="data">26 октября 2025 год</h5>
+        <div class="mes-1">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">Привет! Как дела? </p>
+            <span>14:15</span>
+        </div>
+
+        <div class="mes-1">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">Видел новый трейлер к фильму "Интерстеллар 2"? Выглядит эпично!</p><span>14:15</span>
+        </div>
+        <div class="mes-1 mes-me">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">Привет! Нормально, работаю над проектом. Трейлер — да, жду премьеру! </p><span>14:18</span>
+        </div>
+        <div class="mes-1 mes-me">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">А ты что планируешь на вечер? </p> <span>14:20</span>
+        </div>
+        <div class="mes-1">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">Может, закажем пиццу и посмотрим сериал? Netflix зовёт. </p><span>14:21</span>
+        </div>
+        <div class="mes-1 mes-me">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">Отличная идея! Пепперони с двойным сыром? 😂 </p><span>14:22</span>
+        </div>
+
+          <div class="mes-1">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">Ха, точно! И добавь салат, чтобы не чувствовать вины.</p>  <span>14:23</span>
+        </div>
+                <div class="mes-1 mes-me">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">Салат? Ладно, уговорил. В 19:00 подойдёт? </p> <span>14:24</span>
+        </div>
+                <div class="mes-1">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">Идеально! Жду, бро. </p> <span>14:25</span>
+        </div>
+                <div class="mes-1 mes-me">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">До встречи! </p> <span>14:26</span>
+        </div>
+                <div class="mes-1">
+          <img class="avatar-user" src="image/Bez_foto_7.jpg">
+            <p class="text-start text-break ">Кстати, напомни, где мы оставили тот плейлист? </p> <span>14:27</span>
+        </div>
+      </div>
+
+      <div class="mb-3 div-form-control-mes">
+        <textarea class="form-control form-control-mes" id="exampleFormControlTextarea1" rows="3"></textarea>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+  <script>
+    // Автоскролл к последнему сообщению при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        const messagesContainer = document.querySelector('.chat-mess');
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;  // Скролл к низу
+        }
+    });
+</script>
+
+{% endblock %}
