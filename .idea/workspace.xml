@@ -5,8 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9af9b38b-76d4-4df1-a5d6-cac330d3391f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Messenger.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Messenger.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/messenger/chat/consumers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/messenger/chat/routing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/messenger/chat/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/messenger/chat/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/messenger/chat/static/image/Bez_foto_7.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/messenger/chat/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/messenger/chat/templates/home.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/messenger/chat/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/messenger/chat/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/messenger/chat/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/messenger/chat/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/messenger/login/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/messenger/login/templates/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/messenger/login/templates/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/messenger/login/templates/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/messenger/login/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/messenger/login/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/messenger/login/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/messenger/login/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/messenger/messenger/asgi.py" beforeDir="false" afterPath="$PROJECT_DIR$/messenger/messenger/asgi.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,9 +26,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 0
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="34nQJpTPH5KvxzbzomRmjUV2kP2" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -29,7 +39,8 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main"
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/home/stone/Рабочий стол/developer projects/ОП"
   }
 }]]></component>
   <component name="SharedIndexes">

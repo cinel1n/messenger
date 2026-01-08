@@ -13,6 +13,9 @@ class LoginUserView(LoginView):
     form_class = LoginUserForm
     template_name = 'login.html'
 
+    def get_success_url(self):
+        return reverse_lazy('home')
+
 
 class RegisterUserView(FormView):
     form_class = CreateUserForm
@@ -20,6 +23,7 @@ class RegisterUserView(FormView):
     success_url = reverse_lazy("log")
 
     def form_valid(self, form):
+        print(form)
         user = form.save()
         login(self.request, user)
         return super().form_valid(form)

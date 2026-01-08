@@ -52,7 +52,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": ['redis://127.0.0.1:6379',],
+        },
+    },
+}
 ROOT_URLCONF = 'messenger.urls'
 
 TEMPLATES = [

@@ -9,11 +9,15 @@ Messenger
   <div class="users-messages col-3">
 
     {% for group in groups %}
-    <a class="user-messege" id="{{group.uuid}}" href="chat/{{group.uuid}}" style="">
+    <a class="user-messege" id="{{group.uuid}}" href="{% url 'group' group.uuid %}" style="">
       <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
       <div>
-        <h3 class="name-user">{{ group.name}}</h3>
-        <p class="last-message text-truncate">Видел новый трейлер к фильму "Интерстеллар 2"? Выглядит эпично!</p>
+        {% for i in group.members.all %}
+        {% if i != user %}
+        <h3 class="name-user">{{i}}</h3>
+        {%  endif %}
+        {% endfor%}
+        <p class="last-message text-truncate">{{last_message}}</p>
       </div>
 
     </a>
@@ -23,65 +27,38 @@ Messenger
 
     <div class="chat col-9">
         <div class="user-messege user-current">
-          <h3 class="name-user">Bob Smith</h3>
+          <h3 class="name-user">{{ group_member }}</h3>
 
         </div>
 
 
-      <div class="chat-mess" >
-        <h5 class="data">26 октября 2025 год</h5>
-        <div class="mes-1">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">Привет! Как дела? </p>
-            <span>14:15</span>
-        </div>
+      <div class="chat-mess" style="margin-top:1vh" >
+        {% for mess in messages %}
 
-        <div class="mes-1">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">Видел новый трейлер к фильму "Интерстеллар 2"? Выглядит эпично!</p><span>14:15</span>
-        </div>
+<!--        <h5 class="data"> {{mess.timestamp.date }}</h5>-->
+        {% if mess.author == user %}
         <div class="mes-1 mes-me">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">Привет! Нормально, работаю над проектом. Трейлер — да, жду премьеру! </p><span>14:18</span>
-        </div>
-        <div class="mes-1 mes-me">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">А ты что планируешь на вечер? </p> <span>14:20</span>
-        </div>
-        <div class="mes-1">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">Может, закажем пиццу и посмотрим сериал? Netflix зовёт. </p><span>14:21</span>
-        </div>
-        <div class="mes-1 mes-me">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">Отличная идея! Пепперони с двойным сыром? 😂 </p><span>14:22</span>
-        </div>
-
+          {% else %}
           <div class="mes-1">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">Ха, точно! И добавь салат, чтобы не чувствовать вины.</p>  <span>14:23</span>
+            {% endif %}
+
+            <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
+            <p class="text-start text-break ">{{ mess.content }} </p>
+            <span>{{mess.timestamp }} </span>
+          </div>
+          {% endfor %}
         </div>
-                <div class="mes-1 mes-me">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">Салат? Ладно, уговорил. В 19:00 подойдёт? </p> <span>14:24</span>
-        </div>
-                <div class="mes-1">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">Идеально! Жду, бро. </p> <span>14:25</span>
-        </div>
-                <div class="mes-1 mes-me">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">До встречи! </p> <span>14:26</span>
-        </div>
-                <div class="mes-1">
-          <img class="avatar-user" src="image/Bez_foto_7.jpg">
-            <p class="text-start text-break ">Кстати, напомни, где мы оставили тот плейлист? </p> <span>14:27</span>
+          <div class="mb-3 div-form-control-mes d-flex">
+              <textarea class="form-control form-control-mes me-2"
+                  id="message-input"
+                  rows="3"
+                  placeholder="Введите сообщение...">
+
+              </textarea>
+            <button class="btn btn-primary" id="send-button" style="height:5vh; margin:auto">Отправить</button>
         </div>
       </div>
 
-      <div class="mb-3 div-form-control-mes">
-        <textarea class="form-control form-control-mes" id="exampleFormControlTextarea1" rows="3"></textarea>
-      </div>
 
     </div>
 
@@ -96,9 +73,153 @@ Messenger
     document.addEventListener('DOMContentLoaded', function() {
         const messagesContainer = document.querySelector('.chat-mess');
         if (messagesContainer) {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;  // Скролл к низу
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
     });
+
+    base_url = `${window.location.hostname}:${window.location.port}`
+
+    // Получаем UUID текущего чата
+    const path_parts = window.location.pathname.split('/').filter(Boolean)
+    const current_chat_uuid = path_parts.length >= 2 ? path_parts[1] : null
+
+    // WebSocket для чата (только если есть открытый чат)
+    let chatWebSocket = null
+
+    if (current_chat_uuid) {
+        chatWebSocket = new WebSocket(`ws://${base_url}/groups/${current_chat_uuid}/`)
+
+        chatWebSocket.onopen = function (e) {
+            console.log("Подключен к чату:", current_chat_uuid)
+        }
+
+        chatWebSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data)
+            console.log("Получено сообщение:", data)
+
+            if (data.type === "chat_message" || data.type === "text_message") {
+                // Добавляем сообщение в чат
+                addMessageToChat(data.message, data.author)
+
+                // Обновляем последнее сообщение в списке
+                updateLastMessage(current_chat_uuid, data.message, data.author)
+            }
+        }
+
+        chatWebSocket.onclose = function (e) {
+            console.error('Chat socket closed')
+        }
+
+        chatWebSocket.onerror = function(e) {
+            console.error('WebSocket error:', e)
+        }
+    }
+
+    // Функция добавления сообщения в чат
+    function addMessageToChat(content, sender) {
+        const chatMessages = document.querySelector('.chat-mess')
+        if (!chatMessages) return
+
+        const isCurrentUser = sender === '{{ user.username }}'
+
+        const messageDiv = document.createElement('div')
+        messageDiv.className = isCurrentUser ? 'mes-1 mes-me' : 'mes-1'
+
+        const time = new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+
+        messageDiv.innerHTML = `
+            <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
+            <p class="text-start text-break">${content}</p>
+            <span>${time}</span>
+        `
+
+        chatMessages.appendChild(messageDiv)
+        chatMessages.scrollTop = chatMessages.scrollHeight
+    }
+
+    // Функция обновления последнего сообщения в списке
+    function updateLastMessage(chat_uuid, message, sender) {
+        const chatElement = document.getElementById(chat_uuid)
+        if (!chatElement) return
+
+        const lastMessageElem = chatElement.querySelector('.last-message')
+        if (lastMessageElem) {
+            const isCurrentUser = sender === '{{ user.username }}'
+            const prefix = isCurrentUser ? "Вы: " : ""
+            lastMessageElem.textContent = prefix + (message.length > 30 ?
+                message.substring(0, 30) + '...' : message)
+
+<!--            // Подсвечиваем чат-->
+<!--            chatElement.style.backgroundColor = '#e8f5e8'-->
+<!--            setTimeout(() => {-->
+<!--                chatElement.style.backgroundColor = ''-->
+<!--            }, 3000)-->
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Отправка сообщений (только если есть открытый чат)
+        if (current_chat_uuid && chatWebSocket) {
+            const messageInput = document.getElementById('message-input')
+            const sendButton = document.getElementById('send-button')
+
+            if (messageInput && sendButton) {
+                // Автофокус
+                messageInput.focus()
+
+                // Отправка по кнопке
+                sendButton.addEventListener('click', function(e) {
+                    e.preventDefault()
+                    sendMessage()
+                })
+
+                // Отправка по Enter
+                messageInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        sendMessage()
+                    }
+                })
+
+                function sendMessage() {
+                    const content = messageInput.value.trim()
+                    if (!content) {
+                        alert('Введите сообщение!')
+                        return
+                    }
+
+                    if (chatWebSocket.readyState === WebSocket.OPEN) {
+                        console.log('Отправляю сообщение:', content)
+
+                        chatWebSocket.send(JSON.stringify({
+                            'type': "text_message",
+                            'author': '{{ user.username }}',
+                            'message': content
+                        }))
+
+                        // Очищаем поле
+                        messageInput.value = ''
+                        messageInput.focus()
+                    } else {
+                        console.error('WebSocket не подключен')
+                        alert('Нет соединения с сервером!')
+                    }
+                }
+            }
+        }
+
+        // Автоскролл к последним сообщениям
+        const chatMessages = document.querySelector('.chat-mess')
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight
+        }
+    })
+
+
 </script>
+
+
 
 {% endblock %}
