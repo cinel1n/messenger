@@ -1,0 +1,9 @@
+.mess-btn{
+    display:flex;
+    background-color: rgb(59, 113, 202);
+    color:white;
+    height:5vh;
+    text-align: center;
+    margin-left:1vw;
+    align-items: center;
+        }

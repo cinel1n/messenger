@@ -14,10 +14,14 @@ Messenger
       <div>
         {% for i in group.members.all %}
         {% if i != user %}
-        <h3 class="name-user">{{i}}</h3>
+        <h3 class="name-user">{{i.first_name}}</h3>
         {%  endif %}
         {% endfor%}
-        <p class="last-message text-truncate">{{last_message}}</p>
+        {% if group.last_message %}
+        <p class="last-message text-truncate">{{group.last_message}}</p>
+        {% else %}
+        <p class="last-message text-truncate"></p>
+        {% endif %}
       </div>
 
     </a>
@@ -216,10 +220,10 @@ Messenger
             chatMessages.scrollTop = chatMessages.scrollHeight
         }
     })
-
-
 </script>
-
-
-
 {% endblock %}
+
+
+{% block search_user %}
+{% include "includes/result_user.html" %}
+{% endblock%}

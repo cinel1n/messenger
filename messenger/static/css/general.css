@@ -1,0 +1,120 @@
+/* Контейнер формы поиска */
+form.d-flex {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Выпадающий список результатов как в VK */
+.search-dropdown {
+    position: absolute;
+    top: 100%; /* Прямо под строкой поиска */
+    left: 0;
+    width: 100%;
+    margin-top: 5px;
+    z-index: 1050; /* Выше чем navbar */
+    display: none; /* Скрыт по умолчанию */
+    animation: fadeIn 0.15s ease-out;
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Карточка с результатами */
+#search-results {
+    border-radius: 12px;
+    border: 1px solid #e1e3e6;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    max-height: 400px;
+    overflow-y: auto;
+    background: white;
+}
+
+/* Элемент результата */
+.search-result-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #f7f8fa;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    text-decoration: none;
+    color: inherit;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background-color: #f7f8fa;
+}
+
+/* Аватарка в результате */
+.search-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    border: 1px solid #e1e3e6;
+}
+
+/* Информация о пользователе */
+.search-user-info {
+    flex: 1;
+}
+
+.search-username {
+    font-weight: 500;
+    font-size: 14px;
+    color: #2c2d2e;
+    margin-bottom: 2px;
+}
+
+.search-fullname {
+    font-size: 13px;
+    color: #818c99;
+}
+
+/* Пустой результат */
+.search-empty {
+    padding: 20px;
+    text-align: center;
+    color: #818c99;
+    font-size: 14px;
+}
+
+/* Индикатор загрузки */
+.search-loading {
+    padding: 20px;
+    text-align: center;
+}
+
+/* Кастомный скроллбар */
+#search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+#search-results::-webkit-scrollbar-track {
+    background: #f7f8fa;
+    border-radius: 3px;
+}
+
+#search-results::-webkit-scrollbar-thumb {
+    background: #dce1e6;
+    border-radius: 3px;
+}
+
+#search-results::-webkit-scrollbar-thumb:hover {
+    background: #b8c1cc;
+}

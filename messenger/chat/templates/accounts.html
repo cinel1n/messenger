@@ -1,10 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% load static %}
+{% block title%}
+Результаты по поиску "{{search_username}}"
+{% endblock%}
 
-</body>
-</html>
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/accounts.css' %}">
+{% endblock %}
+
+{% block content %}
+
+  <div class="users-messages col-3" style="margin:auto">
+    {% if object_list %}
+    {% for user in object_list %}
+    <div class="user-messege"  style="">
+      <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
+      <div>
+
+        <h3 class="name-user">{{user.first_name}} {{user.last_name}}</h3>
+
+        <p class="last-message text-truncate">@{{user.username}}</p>
+      </div>
+      <form method="POST" action="{% url 'user' user.username %}">
+        {% csrf_token %}
+        <button class="btn mess-btn" role="button">Написать</button>
+      </form>
+    </div>
+    {% endfor %}
+    {% else %}
+    Пользователь, с таким username, не найден
+    {% endif %}
+
+    </div>
+{% endblock %}

@@ -12,7 +12,7 @@ User = get_user_model()
 
 class Group(models.Model):
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
-    name = models.CharField(max_length=30)
+    name = models.CharField(max_length=30, blank=True)
     members = models.ManyToManyField(User)
 
     def get_absolute_url(self):
@@ -28,6 +28,9 @@ class Group(models.Model):
         self.event_set.create(type="Left", user=user)
         self.save()
 
+    def last_message(self):
+        return self.message_set.order_by("-timestamp").first()
+
 
 class Message(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -36,9 +39,7 @@ class Message(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
     def __str__(self):
-        date = self.timestamp.date()
-        time = self.timestamp.time()
-        return f"{self.author}:- {self.content} @{date} {time.hour}:{time.minute}"
+        return f"{self.author}: {self.content}"
 
 
 class Event(models.Model):

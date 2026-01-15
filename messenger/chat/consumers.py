@@ -9,13 +9,11 @@ from .models import Event, Message, Group
 
 class JoinAndLeave(WebsocketConsumer):
     def connect(self):
-        print("WORK!")
         self.user = self.scope["user"]
         self.accept()
 
     def receive(self, text_data=None, bytes_data=None):
         text_data = json.loads(text_data)
-        print("WORK!")
         type = text_data.get("type", None)
         if type:
             data = text_data.get("data", None)

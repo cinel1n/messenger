@@ -23,10 +23,12 @@
 <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid div-nav">
-    <a class="navbar-brand" href="#">Messenger</a>
+    <a class="navbar-brand" href="/">Messenger</a>
+
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Переключатель навигации">
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
@@ -34,14 +36,17 @@
         </li>
 
       </ul>
-      <form class="d-flex" role="search">
+      <form class="d-flex" role="search"
+        action="{% url 'search' %}">
             <div class="input-group">
             <span class="input-group-text" id="basic-addon1">@</span>
-            <input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+                <input  type="text" name="search_user" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" autocomplete="off">
             </div>
-            <img class="avatar-user" style="margin-left: 1vw;" src="{% static 'image/Bez_foto_7.jpg' %}" >
-        </a>
       </form>
+    </div>
+  </div>
+
+</nav>
     </div>
   </div>
   </nav>
@@ -49,6 +54,7 @@
     {% endblock%}
 <script type="text/javascript" src="{% static 'js/mdb.umd.min.js' %}"></script>
 <script type="text/javascript"></script>
+<script src="https://unpkg.com/htmx.org@2.0.7"></script>
 </body>
 
 </html>

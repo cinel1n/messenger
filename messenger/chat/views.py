@@ -1,11 +1,14 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import QuerySet
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, TemplateView
-from .models import Group
+from .models import Group, User
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 
 class HomeView(LoginRequiredMixin, ListView):
     model = Group
@@ -33,7 +36,6 @@ class HomeView(LoginRequiredMixin, ListView):
             context['group'] = group
             context['messages'] = sorted_message_event_list
             context['group_member'] = group_member
-            context['last_message'] = sorted_message_event_list[-1] if len(sorted_message_event_list)>0 else ""
 
         context["user"] = self.request.user
         context['groups'] = self.model.objects.filter(members=self.request.user)
@@ -41,3 +43,33 @@ class HomeView(LoginRequiredMixin, ListView):
         return context
 
 
+
+class AccountsSearchView(LoginRequiredMixin, ListView):
+    model = User
+    template_name = "accounts.html"
+
+    def get_queryset(self):
+        users = User.objects.filter(username__istartswith = self.request.GET.get("search_user"))
+        return users
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        username = self.request.GET.get("search_user")
+        context['search_username'] = username
+        return context
+
+
+def start_chat_view(request, username):
+    user = User.objects.get(username=username)
+    group = Group.objects.filter(members=user).filter(members=request.user).first()
+
+    if user == request.user:
+        return redirect("home")
+
+    if not group:
+        group = Group.objects.create()
+        group.members.add(request.user, user)
+
+    url = reverse('group', args=[group.uuid])
+
+    return redirect(url)
