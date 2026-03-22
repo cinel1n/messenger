@@ -1,6 +1,4 @@
-from django.db import models
-
-# Create your models here.
+from datetime import datetime
 
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -11,9 +9,15 @@ from django.urls import reverse
 User = get_user_model()
 
 class Group(models.Model):
+    class GroupType(models.TextChoices):
+        PRIVATE = 'private'
+        PUBLIC = 'public'
+
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
     name = models.CharField(max_length=30, blank=True)
-    members = models.ManyToManyField(User)
+    members = models.ManyToManyField(User, through='GroupMemberModel')
+    type = models.CharField(max_length=10, choices=GroupType.choices, default=GroupType.PRIVATE)
+
 
     def get_absolute_url(self):
         return reverse("group", args=[str(self.uuid)])
@@ -31,6 +35,23 @@ class Group(models.Model):
     def last_message(self):
         return self.message_set.order_by("-timestamp").first()
 
+    def get_name(self):
+        if self.type == GroupType.PUBLIC:
+            return self.name
+        members = self.members.all()
+        
+
+
+class GroupMemberModel(models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    is_admin = models.BooleanField(default=False)
+    joined_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
+    last_read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("group", "user")
 
 class Message(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -40,6 +61,7 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.author}: {self.content}"
+
 
 
 class Event(models.Model):

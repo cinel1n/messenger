@@ -4,11 +4,13 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import ListView, TemplateView
-from .models import Group, User
+from django.views.generic import ListView, TemplateView, FormView
+from .models import Group, User, GroupMemberModel
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from .form import GroupForm
+from django.db.models import Count
 
 class HomeView(LoginRequiredMixin, ListView):
     model = Group
@@ -31,14 +33,28 @@ class HomeView(LoginRequiredMixin, ListView):
             events = group.event_set.all()
             message_and_event_list = [*messages, *events]
             sorted_message_event_list = sorted(message_and_event_list, key=lambda x: x.timestamp)
-            group_member = [i for i in group.members.all() if i != self.request.user][0]
+            members = group.members.all()
+
+            if group.type == group.GroupType.PUBLIC:
+                group_member = f"{len(group.members.all())} участников"
+            else:
+                group_member = [i for i in group.members.all() if i != self.request.user][0]
 
             context['group'] = group
             context['messages'] = sorted_message_event_list
             context['group_member'] = group_member
 
         context["user"] = self.request.user
-        context['groups'] = self.model.objects.filter(members=self.request.user)
+        group_list = []
+
+        for group in self.model.objects.filter(members=self.request.user):
+            if group.type == group.GroupType.PUBLIC:
+                group_list.append([group.name, group])
+            else:
+                group_name = [i for i in group.members.all() if i != self.request.user][0].username
+                group_list.append([group_name, group])
+
+        context['groups'] = group_list
 
         return context
 
@@ -61,7 +77,7 @@ class AccountsSearchView(LoginRequiredMixin, ListView):
 
 def start_chat_view(request, username):
     user = User.objects.get(username=username)
-    group = Group.objects.filter(members=user).filter(members=request.user).first()
+    group = Group.objects.filter(members=user).filter(members=request.user).annotate(num_members=Count("members")).filter(num_members=2).first()
 
     if user == request.user:
         return redirect("home")
@@ -73,3 +89,35 @@ def start_chat_view(request, username):
     url = reverse('group', args=[group.uuid])
 
     return redirect(url)
+
+
+class CreateGroupView(FormView):
+    model = Group
+    form_class = GroupForm
+    template_name = "create_group.html"
+    success_url = reverse_lazy("home")
+
+    def form_valid(self, form):
+        group = form.save(commit=False)
+        group.type = group.GroupType.PUBLIC
+        group.save()
+        
+        GroupMemberModel.objects.create(
+            group=group, 
+            user=self.request.user, 
+            is_admin=True
+        )
+        for user in form.cleaned_data["members"]:
+            if user != self.request.user:
+                GroupMemberModel.objects.create(
+                    group=group, 
+                    user=user, 
+                )
+
+        return super().form_valid(form)
+
+    # передает юзера в форму
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user  
+        return kwargs

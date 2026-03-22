@@ -1,0 +1,14 @@
+
+
+.form-create-group{
+    width:30%;
+    margin:auto;
+    margin-top:5vh;
+}
+.form-control{
+    border:1 solid black;
+}
+
+.tab-pane{
+    margin-bottom:1vh;
+}

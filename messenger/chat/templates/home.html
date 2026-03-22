@@ -8,20 +8,20 @@ Messenger
 <div class="chats row">
   <div class="users-messages col-3">
 
-    {% for group in groups %}
-    <a class="user-messege" id="{{group.uuid}}" href="{% url 'group' group.uuid %}" style="">
+    {% for name, group in groups %}
+    <a class="user-messege" id="{{group.uuid}}" href="{% url 'group' group.uuid %}">
       <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
       <div>
-        {% for i in group.members.all %}
-        {% if i != user %}
-        <h3 class="name-user">{{i.first_name}}</h3>
-        {%  endif %}
-        {% endfor%}
-        {% if group.last_message %}
-        <p class="last-message text-truncate">{{group.last_message}}</p>
-        {% else %}
-        <p class="last-message text-truncate"></p>
-        {% endif %}
+
+        <h3 class="name-user">{{name}}</h3>
+
+        
+        <p class="last-message text-truncate">
+            {% if group.last_message %}
+            {{group.last_message}}
+            {% endif %}
+        </p>
+
       </div>
 
     </a>
@@ -155,14 +155,9 @@ Messenger
             const prefix = isCurrentUser ? "Вы: " : ""
             lastMessageElem.textContent = prefix + (message.length > 30 ?
                 message.substring(0, 30) + '...' : message)
-
-<!--            // Подсвечиваем чат-->
-<!--            chatElement.style.backgroundColor = '#e8f5e8'-->
-<!--            setTimeout(() => {-->
-<!--                chatElement.style.backgroundColor = ''-->
-<!--            }, 3000)-->
         }
     }
+    
     document.addEventListener('DOMContentLoaded', function() {
         // Отправка сообщений (только если есть открытый чат)
         if (current_chat_uuid && chatWebSocket) {

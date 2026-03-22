@@ -1,11 +1,26 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/create-group.css' %}">
+{% endblock %}
 {% block title %}
 Создать группу
 {% endblock%}
 
 {% block content %}
+<form method="POST" class="form-create-group">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="tab-pane fade show active" id="pills-login" role="tabpanel" aria-labelledby="tab-login">
 
+        <label class="form-label" for="{{field.name}}"> {{field.label}}</label>
+        {{field}}
+    </div>
+    {% endfor%}
+    <button type="submit" class="btn btn-primary btn-block mb-4">
+        Sign in
+    </button>
+</form>
 
 {% endblock %}
