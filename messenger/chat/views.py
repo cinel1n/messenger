@@ -36,13 +36,13 @@ class HomeView(LoginRequiredMixin, ListView):
             members = group.members.all()
 
             if group.type == group.GroupType.PUBLIC:
-                group_member = f"{len(group.members.all())} участников"
+                group_member = f"{len(members)} участников"
             else:
-                group_member = [i for i in group.members.all() if i != self.request.user][0]
+                group_member = [i for i in members if i != self.request.user][0]
 
             context['group'] = group
             context['messages'] = sorted_message_event_list
-            context['group_member'] = group_member
+            context['group_member'] = group.get_name(self.request.user)
 
         context["user"] = self.request.user
         group_list = []
@@ -77,7 +77,7 @@ class AccountsSearchView(LoginRequiredMixin, ListView):
 
 def start_chat_view(request, username):
     user = User.objects.get(username=username)
-    group = Group.objects.filter(members=user).filter(members=request.user).annotate(num_members=Count("members")).filter(num_members=2).first()
+    group = Group.objects.filter(members=user).filter(members=request.user).filter(type=Group.GroupType.PRIVATE).first()
 
     if user == request.user:
         return redirect("home")
@@ -85,7 +85,7 @@ def start_chat_view(request, username):
     if not group:
         group = Group.objects.create()
         group.members.add(request.user, user)
-
+    
     url = reverse('group', args=[group.uuid])
 
     return redirect(url)
@@ -101,7 +101,7 @@ class CreateGroupView(FormView):
         group = form.save(commit=False)
         group.type = group.GroupType.PUBLIC
         group.save()
-        
+
         GroupMemberModel.objects.create(
             group=group, 
             user=self.request.user, 
