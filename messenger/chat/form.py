@@ -19,4 +19,5 @@ class GroupForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user:
-            self.fields["members"].queryset = User.objects.exclude(id=user.id)
+            groups = user.group_set.all()
+            self.fields["members"].queryset = User.objects.filter(group__in=groups).exclude(id=user.id)
