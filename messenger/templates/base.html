@@ -34,10 +34,15 @@
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="/">Главная</a>
         </li>
+
+        {% if not request.user.is_anonymous %}
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="{% url 'create_group' %}">Создать группу</a>
         </li>
-
+        {% endif %}
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{% url 'logout' %}">Выйти</a>
+        </li>
       </ul>
       <form class="d-flex" role="search"
         action="{% url 'search' %}">

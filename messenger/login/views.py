@@ -1,13 +1,13 @@
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, authenticate
 from .form import LoginUserForm, CreateUserForm
-
-
+from django.contrib.auth import logout
+from django.shortcuts import redirect
 
 class LoginUserView(LoginView):
     form_class = LoginUserForm
@@ -27,6 +27,10 @@ class RegisterUserView(FormView):
         login(self.request, user)
         return super().form_valid(form)
 
+
+def logout_(request):
+    logout(request)
+    return redirect('log')
 
 # class LoginView(FormView):
 #     form_class = UserCreationForm
