@@ -9,7 +9,7 @@ from .models import Group, User, GroupMemberModel
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from .form import GroupForm
+from .form import GroupForm, ProfileForm
 from django.db.models import Count
 
 class HomeView(LoginRequiredMixin, ListView):
@@ -120,4 +120,21 @@ class CreateGroupView(FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user  
+        return kwargs
+
+
+class ProfileView(FormView):
+    form_class = ProfileForm
+    model = User
+    template_name = "profile.html"
+    success_url = "/"
+    def form_valid(self, form):
+        print("WORKS!")
+        form = form.save()
+        return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        kwargs['instance'] = self.request.user
         return kwargs

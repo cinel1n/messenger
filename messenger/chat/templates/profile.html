@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{user}}{% endblock%}
+{% block content %}
+<div style="width: 25vw; margin: auto; margin-top: 10vh;">
+
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="pills-register" role="tabpanel" aria-labelledby="tab-register">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+
+                    {% for field in form %}
+
+                    <div data-mdb-input-init class="form-outline mb-4">
+                        {{field}}
+                        <label class="form-label" for={{field.id_for_label}}>{{field.label}}</label>
+                    </div>
+                    
+                    {% endfor %}
+                    <button type="submit"
+                            class="btn btn-primary btn-block mb-3">change</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{%endblock%}
