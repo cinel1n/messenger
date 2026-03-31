@@ -3,6 +3,18 @@ from django import forms
 from django.contrib.auth.models import User
 
 
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name' ]
+
+    def  __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user:
+            self.initial['first_name'] = user.first_name
+            self.initial['last_name'] = user.last_name
+            self.initial['username'] = user.username
+
 class LoginUserForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'id':"loginName"}), label="Username", max_length=15)
     password = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'id':"loginPassword"}), label="Password", max_length=50)
