@@ -5,7 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, TemplateView, FormView
-from .models import Group, User, GroupMemberModel
+from .models import Group, User, GroupMemberModel, Event
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -34,11 +34,6 @@ class HomeView(LoginRequiredMixin, ListView):
             message_and_event_list = [*messages, *events]
             sorted_message_event_list = sorted(message_and_event_list, key=lambda x: x.timestamp)
             members = group.members.all()
-
-            if group.type == group.GroupType.PUBLIC:
-                group_member = f"{len(members)} участников"
-            else:
-                group_member = [i for i in members if i != self.request.user][0]
 
             context['group'] = group
             context['messages'] = sorted_message_event_list
@@ -109,12 +104,11 @@ class CreateGroupView(FormView):
             is_admin=True
         )
         for user in form.cleaned_data["members"]:
-            if user != self.request.user:
-                GroupMemberModel.objects.create(
-                    group=group, 
-                    user=user, 
-                )
-
+            GroupMemberModel.objects.create(
+                group=group, 
+                user=user, 
+            )
+            Event.objects.create(type="Join", user=user, group=group)
         return super().form_valid(form)
 
     # передает юзера в форму

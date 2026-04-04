@@ -39,7 +39,6 @@ Messenger
       <div class="chat-mess" style="margin-top:1vh" >
         {% for mess in messages %}
 
-<!--        <h5 class="data"> {{mess.timestamp.date }}</h5>-->
       {% if mess.type_content == "message" %}
         {% if mess.author == user %}
         <div class="mes-1 mes-me">
