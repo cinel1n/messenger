@@ -35,12 +35,15 @@ class Group(models.Model):
     def last_message(self):
         return self.message_set.order_by("-timestamp").first()
 
-    def get_name(self, user):
+    def get_name(self, user=None):
         if self.type == self.GroupType.PUBLIC:
             return self.name
-            
-        member = [i for i in self.members.all() if i != user][0]
-        return member
+
+        elif user:
+            member = [i for i in self.members.all() if i != user][0]
+            return member
+
+        return None
         
 
 
