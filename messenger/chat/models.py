@@ -55,6 +55,7 @@ class GroupMemberModel(models.Model):
     class Meta:
         unique_together = ("group", "user")
 
+
 class Message(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -63,7 +64,9 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.author}: {self.content}"
-
+    
+    def type_content(self):
+        return "message"
 
 
 class Event(models.Model):
@@ -84,3 +87,6 @@ class Event(models.Model):
 
     def __str__(self) -> str:
         return f"{self.description}"
+
+    def type_content(self):
+        return "event"

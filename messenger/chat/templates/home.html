@@ -40,6 +40,7 @@ Messenger
         {% for mess in messages %}
 
 <!--        <h5 class="data"> {{mess.timestamp.date }}</h5>-->
+      {% if mess.type_content == "message" %}
         {% if mess.author == user %}
         <div class="mes-1 mes-me">
           {% else %}
@@ -50,7 +51,14 @@ Messenger
             <p class="text-start text-break ">{{ mess.content }} </p>
             <span>{{mess.timestamp }} </span>
           </div>
+          {% elif mess.type_content == "event" %}
+          <div class="mes-1">
+            <p class="text-start text-break ">{{ mess.description }} </p>
+            <span>{{mess.timestamp }} </span>
+          </div>
+          {%endif%}
           {% endfor %}
+          
         </div>
           <div class="mb-3 div-form-control-mes d-flex">
               <textarea class="form-control form-control-mes me-2"

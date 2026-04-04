@@ -84,7 +84,8 @@ def start_chat_view(request, username):
 
     if not group:
         group = Group.objects.create()
-        group.members.add(request.user, user)
+        group.add_user_to_group(user)
+        group.add_user_to_group(request.user)
     
     url = reverse('group', args=[group.uuid])
 
