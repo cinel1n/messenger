@@ -117,4 +117,3 @@ class CreateGroupView(FormView):
         kwargs["user"] = self.request.user  
         return kwargs
 
-
