@@ -20,5 +20,4 @@ class GroupForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if user:
             groups = user.group_set.all()
-
             self.fields["members"].queryset = User.objects.filter(group__in=groups).exclude(id=user.id).distinct()
