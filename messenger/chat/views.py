@@ -60,7 +60,7 @@ class AccountsSearchView(LoginRequiredMixin, ListView):
     template_name = "accounts.html"
 
     def get_queryset(self):
-        users = User.objects.filter(username__istartswith = self.request.GET.get("search_user"))
+        users = User.objects.filter(username= self.request.GET.get("search_user"))
         return users
 
     def get_context_data(self, **kwargs):
