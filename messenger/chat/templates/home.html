@@ -29,7 +29,9 @@ Messenger
 
     </div>
 
+    
     <div class="chat col-9">
+        {% if group_member %}
         <div class="user-messege user-current">
           <h3 class="name-user">{{ group_member }}</h3>
 
@@ -72,7 +74,7 @@ Messenger
 
 
     </div>
-
+    {% endif %}
   </div>
 
 
