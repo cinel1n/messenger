@@ -19,6 +19,7 @@ class GroupConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data=None, bytes_data=None):
         """
+        После отправки сообщения пользователем на сервер
         Отправляет высокоуровневое событие в группу (channel_layer. self.send_json - низкоуровневое)
         """
 
@@ -35,7 +36,7 @@ class GroupConsumer(AsyncWebsocketConsumer):
                 group=self.group
             )
 
-        await self.channel_layer.group_send(
+        await self.channel_layer.group_send( # попадает в Redis
             self.group_uuid,
             {
                 "type": "text_message",
@@ -46,7 +47,7 @@ class GroupConsumer(AsyncWebsocketConsumer):
 
     async def text_message(self, event):
         """
-        Вызывается, когда кто-то отправил сообщение в чат.
+        после receive 
         """
         message = event.get("message")
 

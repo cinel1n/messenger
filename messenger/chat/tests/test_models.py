@@ -1,5 +1,5 @@
 from django.test import TestCase
-from chat.models import Group, Message, User, GroupMemberModel
+from chat.models import Group, Message, User, GroupMemberModel, Event
 from django.urls import reverse
 
 
@@ -53,3 +53,16 @@ class ChatModelTest(TestCase):
         content = "content"
         mess = Message.objects.create(author=self.user1, content=content, group=self.group)
         self.assertEqual(self.group.last_message(), mess)
+
+    def test_event_join(self):
+        user = User.objects.create_user(username="testusername003", password="testuserpassword003")
+        self.group.add_user_to_group(user)
+        event1 = Event.objects.filter(group=self.group, type="Join", user=user).count()
+        self.assertEqual(event1, 1)
+
+    def test_event_join(self):
+        user = User.objects.create_user(username="testusername003", password="testuserpassword003")
+        self.group.add_user_to_group(user)
+        self.group.remove_user_from_group(user)
+        event1 = Event.objects.filter(group=self.group, type="Left", user=user).count()
+        self.assertEqual(event1, 1)
