@@ -59,7 +59,7 @@ class ChatModelTest(TestCase):
         self.group.add_user_to_group(user)
         event1 = Event.objects.filter(group=self.group, type="Join", user=user).count()
         self.assertEqual(event1, 1)
-        
+
         self.group.remove_user_from_group(user)
         event1 = Event.objects.filter(group=self.group, type="Left", user=user).count()
         self.assertEqual(event1, 1)

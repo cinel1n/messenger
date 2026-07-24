@@ -100,7 +100,7 @@ class CreateGroupView(FormView):
 
         GroupMemberModel.objects.create(
             group=group, 
-            user=self.request.user, 
+            user=self.request.user,  # добавляется в модель GroupModel
             is_admin=True
         )
         for user in form.cleaned_data["members"]:
