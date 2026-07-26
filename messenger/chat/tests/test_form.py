@@ -33,7 +33,7 @@ class GroupFormTest(TestCase):
         queryset = form1.fields["members"].queryset
         self.assertEqual(queryset.count(), 0)
 
-    def test_valid(self):
+    def test_valid_is(self):
         group = GroupForm(
             data={
                 "name": "TestValid", 
@@ -41,32 +41,39 @@ class GroupFormTest(TestCase):
                 }, 
             user=self.user
         )
-        group1 = GroupForm(
+        self.assertTrue(group.is_valid())
+
+    def test_valid_members(self):
+        group = GroupForm(
             data={
                 "name": "TestValid", 
                 "members": [], 
                 }, 
             user=self.user
         )
-        group2 = GroupForm(
+        self.assertFalse(group.is_valid())
+
+    def test_valid_name(self):
+        group = GroupForm(
             data={
                 "members":[self.user1.id, ], 
                 }, 
             user=self.user
         )
-        group3 = GroupForm(
+        self.assertFalse(group.is_valid())
+
+    def test_valid_none_user(self):
+        group = GroupForm(
             data={
                 "name":"TestValid",
                 "members":[self.user1.id, ], 
                 }, 
         )
-        self.assertTrue(group.is_valid())
-        self.assertFalse(group1.is_valid())
-        self.assertFalse(group2.is_valid())
-        self.assertFalse(group3.is_valid())
+        
+        self.assertFalse(group.is_valid())
 
     def test_distinct(self):
         self.group1 = Group.objects.create()
         self.group1.members.add(self.user, self.user1)
-        
-        self.assertEqual(self.form.fields["members"].queryset.count(), 1)
+        form = GroupForm(user=self.user)
+        self.assertEqual(form.fields["members"].queryset.count(), 1)
