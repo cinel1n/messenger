@@ -1,0 +1,46 @@
+from django.test import TestCase
+from chat.models import *
+from django.urls import reverse
+
+class ChatHomeViewTest(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(username="testusername002", password="testuserpassword001")
+        self.user = User.objects.create_user(username='testusername001', password="testuserpassword001")
+
+        self.url = reverse("home")
+
+        self.client.login(username='testusername001', password="testuserpassword001")
+        
+        self.group = Group.objects.create()
+        self.group.members.add(self.user, self.user1)
+        
+        Message.objects.create(author=self.user, content="hello!", group=self.group)
+
+    def test_context_home(self):
+        self.response = self.client.get(self.url)
+        groups = self.response.context.get("groups")
+        
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(self.response.context.get("user"), self.user)
+
+    def test_none_context_logout(self):
+        self.client.logout()
+        self.response = self.client.get(self.url)
+        print(self.response)
+        # self.assertIsNone(self.response)
+
+    def test_uuid_context_group(self):
+        self.url_uuid = reverse("group", args=[self.group.uuid, ])
+        self.response_uuid = self.client.get(self.url_uuid)
+
+        group = self.response_uuid.context.get("group")
+        messages = self.response_uuid.context.get("messages")
+        group_member = self.response_uuid.context.get("group_member")
+
+        self.assertEqual(group_member, self.user1)
+        self.assertEqual(self.group, group)
+        self.assertEqual(messages[0].content, "hello!")
+        
+
+
+        
