@@ -33,7 +33,7 @@ class HomeView(LoginRequiredMixin, ListView):
             events = group.event_set.all()
             message_and_event_list = [*messages, *events]
             sorted_message_event_list = sorted(message_and_event_list, key=lambda x: x.timestamp)
-            members = group.members.all()
+            # members = group.members.all()
 
             context['group'] = group
             context['messages'] = sorted_message_event_list

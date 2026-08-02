@@ -20,19 +20,23 @@ class ChatHomeViewTest(TestCase):
         self.response = self.client.get(self.url)
         groups = self.response.context.get("groups")
         
+        self.assertEqual(self.response.status_code, 200)
+        self.assertTemplateUsed(self.response, "home.html")
         self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0][1], self.group)
+        self.assertEqual(groups[0][0], self.user1.username)
         self.assertEqual(self.response.context.get("user"), self.user)
 
     def test_none_context_logout(self):
         self.client.logout()
         self.response = self.client.get(self.url)
-        print(self.response)
-        # self.assertIsNone(self.response)
+        self.assertEqual(self.response.status_code, 302)
 
     def test_uuid_context_group(self):
         self.url_uuid = reverse("group", args=[self.group.uuid, ])
         self.response_uuid = self.client.get(self.url_uuid)
 
+        self.assertEqual(self.response_uuid.status_code, 200)
         group = self.response_uuid.context.get("group")
         messages = self.response_uuid.context.get("messages")
         group_member = self.response_uuid.context.get("group_member")
@@ -40,7 +44,14 @@ class ChatHomeViewTest(TestCase):
         self.assertEqual(group_member, self.user1)
         self.assertEqual(self.group, group)
         self.assertEqual(messages[0].content, "hello!")
+    
+    def test_name_group(self):
+        group = Group.objects.create(type=Group.GroupType.PUBLIC, name="cool girls")
+        group.members.add(self.user, self.user1)
+        response = self.client.get(self.url)
         
+        groups = response.context.get("groups")
+        self.assertIn(["cool girls", group], groups)
 
 
         
