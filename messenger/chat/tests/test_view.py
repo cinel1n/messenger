@@ -54,4 +54,52 @@ class ChatHomeViewTest(TestCase):
         self.assertIn(["cool girls", group], groups)
 
 
-        
+class AccountsSearchViewTest(TestCase):
+    def setUp(self):
+        self.url = reverse("search")
+        self.user1 = User.objects.create_user(username="testusername002", password="testuserpassword001")
+        self.user = User.objects.create_user(username='testusername001', password="testuserpassword001")
+
+        self.client.login(username='testusername001', password="testuserpassword001")
+
+    def test_context_full_username(self):
+        self.response = self.client.get(self.url, {"search_user":self.user1.username})
+
+        result = self.response.context.get("object_list")
+        search_username = self.response.context.get("search_username")
+
+        self.assertEqual(self.response.status_code, 200)
+        self.assertEqual(result.count(), 1)
+        self.assertEqual(result[0], self.user1)
+        self.assertEqual(search_username, self.user1.username)
+        self.assertTemplateUsed(self.response,"accounts.html")
+
+    
+    def test_context_part_username(self):
+        self.response = self.client.get(self.url, {"search_user":self.user1.username[:1]})
+
+        result = self.response.context.get("object_list")
+        search_username = self.response.context.get("search_username")
+
+        self.assertEqual(self.response.status_code, 200)
+        self.assertEqual(result.count(), 0)
+        self.assertEqual(search_username, self.user1.username[:1])
+
+    
+    def test_context_logout(self):
+        self.client.logout()
+        self.response = self.client.get(self.url)
+
+        self.assertEqual(self.response.status_code, 302)
+
+    def test_context_none_searchuser(self):
+        self.response = self.client.get(self.url)
+
+        result = self.response.context.get("object_list")
+        search_username = self.response.context.get("search_username")
+
+
+        self.assertEqual(self.response.status_code, 200)
+        self.assertEqual(result.count(), 0)
+        self.assertEqual(search_username, None)
+
