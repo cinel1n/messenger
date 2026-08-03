@@ -1,5 +1,6 @@
 from django.test import TestCase
 from chat.models import *
+import uuid
 from django.urls import reverse
 
 class ChatHomeViewTest(TestCase):
@@ -103,3 +104,51 @@ class AccountsSearchViewTest(TestCase):
         self.assertEqual(result.count(), 0)
         self.assertEqual(search_username, None)
 
+
+
+class StartChatViewTest(TestCase):
+    def setUp(self):
+        
+        self.username1 = "testusername002"
+        self.username = "testusername001"
+        self.url = reverse("user", args=[self.username1])
+        self.user1 = User.objects.create_user(username=self.username1, password="testuserpassword001")
+        self.user = User.objects.create_user(username=self.username, password="testuserpassword001")
+
+        self.client.login(username='testusername001', password="testuserpassword001")
+        
+
+    def test_start_chat(self):
+        self.response = self.client.get(self.url)
+        group = Group.objects.get()
+
+        self.assertEqual(self.response.status_code, 302)
+        self.assertEqual(self.response.url, reverse("group", args=[group.uuid]))
+
+    def test_none_user(self):
+        url = reverse("user", args=["noneuser"])
+        self.response = self.client.get(url)
+
+        self.assertEqual(self.response.status_code, 404)
+
+    def test_redirect(self):
+        url = reverse("user", args=[self.user.username])
+        self.response = self.client.get(url)
+
+        self.assertEqual(self.response.url, reverse("home"))
+
+    def test_repeat_request(self):
+        self.client.get(self.url)
+        self.client.logout()
+        self.client.login(username=self.username1, password="testuserpassword001")
+
+        url = reverse("user", args=[self.username])
+
+        response = self.client.get(url)
+        group = Group.objects.all()
+        self.assertEqual(group.count(), 1) # no new entries were created
+        self.assertEqual(response.url, reverse("group", args=[group[0].uuid]))
+
+    
+
+    

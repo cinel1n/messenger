@@ -71,7 +71,7 @@ class AccountsSearchView(LoginRequiredMixin, ListView):
 
 
 def start_chat_view(request, username):
-    user = User.objects.get(username=username)
+    user = get_object_or_404(User, username=username)
     group = Group.objects.filter(members=user).filter(members=request.user).filter(type=Group.GroupType.PRIVATE).first()
 
     if user == request.user:
