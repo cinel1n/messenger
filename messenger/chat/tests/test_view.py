@@ -1,9 +1,10 @@
 from django.test import TestCase
 from chat.models import *
 import uuid
+from chat.form import GroupForm
 from django.urls import reverse
 
-class ChatHomeViewTest(TestCase):
+class ChatHomeTest(TestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(username="testusername002", password="testuserpassword001")
         self.user = User.objects.create_user(username='testusername001', password="testuserpassword001")
@@ -55,7 +56,7 @@ class ChatHomeViewTest(TestCase):
         self.assertIn(["cool girls", group], groups)
 
 
-class AccountsSearchViewTest(TestCase):
+class AccountsSearchTest(TestCase):
     def setUp(self):
         self.url = reverse("search")
         self.user1 = User.objects.create_user(username="testusername002", password="testuserpassword001")
@@ -106,9 +107,8 @@ class AccountsSearchViewTest(TestCase):
 
 
 
-class StartChatViewTest(TestCase):
+class StartChatTest(TestCase):
     def setUp(self):
-        
         self.username1 = "testusername002"
         self.username = "testusername001"
         self.url = reverse("user", args=[self.username1])
@@ -150,5 +150,53 @@ class StartChatViewTest(TestCase):
         self.assertEqual(response.url, reverse("group", args=[group[0].uuid]))
 
     
+class CreateGroupTest(TestCase):
+    def setUp(self):
+        self.url = reverse("create_group")
 
+        self.user2 = User.objects.create_user(username="testusername003", password="testuserpassword001")
+        self.user1 = User.objects.create_user(username="testusername002", password="testuserpassword001")
+        self.user = User.objects.create_user(username='testusername001', password="testuserpassword001")
+
+        gr1 = Group.objects.create()
+        gr1.members.add(self.user, self.user1)
+
+        gr2 = Group.objects.create()
+        gr2.members.add(self.user, self.user2)
+
+        self.client.login(username='testusername001', password="testuserpassword001")
+
+    def test_connect_context(self):
+        response = self.client.get(self.url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "create_group.html")
+        self.assertEqual(response.context.get("user"), self.user)
+
+    def test_form_valid(self):
+        name = "Cool girls"
+        response = self.client.post(self.url, 
+        {
+            "name": name, 
+            "members": [self.user1.id, self.user2.id], 
+        })
+        group = Group.objects.all().last()
+        group_member = GroupMemberModel.objects.filter(group=group)
+
+        self.assertEqual(response.url, reverse("home"))
+        self.assertEqual(group.name, name)
+        self.assertEqual(Event.objects.all().count(), 2)
+        self.assertEqual(group_member.count(), 3)
+        self.assertEqual(group.type, Group.GroupType.PUBLIC)
+        self.assertTrue(group_member.filter(user=self.user).first().is_admin)
+        self.assertFalse(group_member.filter(user=self.user1).first().is_admin)
+        self.assertFalse(group_member.filter(user=self.user2).first().is_admin)
     
+    def test_form_invalid(self):
+        response = self.client.post(self.url, 
+        {
+            "name":  "Cool girls", 
+            "members": [], 
+        })
+        self.assertTemplateUsed(response, "create_group.html")
+        self.assertEqual(Group.objects.all().count(), 2)
