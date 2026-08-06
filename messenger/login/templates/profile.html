@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{object.username}}{% endblock%}
+{% block content %}
+<div style="width: 25vw; margin: auto; margin-top: 10vh;">
+
+
+        <div class="tab-content">
+            <ul class="list-group">
+                <li class="list-group-item">{{object.username}}</li>
+                {% if object.first_name %}
+                <li class="list-group-item">{{object.first_name}}</li>
+                {% endif %}
+                
+                {% if object.last_name %}
+                <li class="list-group-item">{{object.last_name}}</li>
+                {%endif %}
+            </ul>
+            
+        </div>
+        <a href="{% url 'edit' %}" >Изменить данные</a>
+    </div>
+</div>
+{%endblock%}

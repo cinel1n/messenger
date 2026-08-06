@@ -21,7 +21,7 @@ class LoginUserForm(AuthenticationForm):
 
 
 class CreateUserForm(UserCreationForm):
-    username = forms.CharField(label="Username", max_length=50, widget=forms.TextInput(attrs={"class":"form-control", 'id':"loginName"}))
+    username = forms.CharField(label="Username",min_length=5 ,max_length=50, widget=forms.TextInput(attrs={"class":"form-control", 'id':"loginName"}))
     first_name = forms.CharField(label="First Name", max_length=50, widget=forms.TextInput(attrs={"class":"form-control", 'id':"RegisterName"}))
     last_name = forms.CharField(label="Last Name", max_length=50, widget=forms.TextInput(attrs={"class":"form-control", 'id':"RegisterLastName"}))
     email = forms.EmailField(label="Email", max_length=50, widget=forms.TextInput(attrs={"class":"form-control", 'id':"RegisterEmail"}))

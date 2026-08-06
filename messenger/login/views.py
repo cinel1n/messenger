@@ -1,6 +1,7 @@
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.views.generic import ListView, DetailView
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -35,11 +36,12 @@ def logout_(request):
     return redirect('log')
 
 
-class ProfileView(FormView):
+class ProfileEditView(FormView):
     form_class = ProfileForm
     model = User
-    template_name = "profile.html"
+    template_name = "edit.html"
     success_url = "/"
+
     def form_valid(self, form):
         form = form.save()
         return super().form_valid(form)
@@ -49,6 +51,17 @@ class ProfileView(FormView):
         kwargs['user'] = self.request.user
         kwargs['instance'] = self.request.user
         return kwargs
+        
+
+class ProfileView(DetailView):
+    model = User
+    template_name = "profile.html"
+    success_url = "/"
+    
+    slug_field = "username"
+    slug_url_kwarg = 'username'
+
+
 # class LoginView(FormView):
 #     form_class = UserCreationForm
 #     template_name = "login.html"
