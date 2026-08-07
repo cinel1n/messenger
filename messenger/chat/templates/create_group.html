@@ -9,18 +9,34 @@
 {% endblock%}
 
 {% block content %}
-<form method="POST" class="form-create-group">
-    {% csrf_token %}
-    {% for field in form %}
-        <div class="tab-pane fade show active" id="pills-login" role="tabpanel" aria-labelledby="tab-login">
+<div class="form-create-group">
 
-        <label class="form-label" for="{{field.name}}"> {{field.label}}</label>
-        {{field}}
-    </div>
-    {% endfor%}
-    <button type="submit" class="btn btn-primary btn-block mb-4">
-        Sign in
-    </button>
-</form>
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        {% for field in form %}
+            <div class="tab-pane">
+                <label class="form-label" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                </label>
+
+                {{ field }}
+
+                {% if field.errors %}
+                    <div class="text-danger">
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary w-100">
+            Create
+        </button>
+    </form>
+
+</div>
 
 {% endblock %}

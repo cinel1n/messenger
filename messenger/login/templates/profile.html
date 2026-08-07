@@ -31,10 +31,11 @@
         {% endif %}
 
     </ul>
-
+    {% if request.user == object %}
     <a href="{% url 'edit' %}" class="edit-profile-btn">
-        Изменить данные
+        Change data
     </a>
+    {% endif %}
 </div>
 
 {% endblock %}

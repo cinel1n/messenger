@@ -1,14 +1,32 @@
-
-
-.form-create-group{
-    width:30%;
-    margin:auto;
-    margin-top:5vh;
+.form-create-group {
+    width: 30%;
+    min-width: 300px;
+    margin: 5vh auto 0;
+    padding: 30px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
 }
-.form-control{
-    border:1 solid black;
+
+.form-control {
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 10px 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.tab-pane{
-    margin-bottom:1vh;
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    outline: none;
+}
+
+.tab-pane {
+    margin-bottom: 1vh;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
 }
