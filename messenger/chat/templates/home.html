@@ -33,9 +33,16 @@ Messenger
     <div class="chat col-9">
         {% if group_member %}
             <div class="user-messege user-current">
+                {% if group.type != group.GroupType.PUBLIC %}
                 <a href="{% url 'profile' group_member %}" class="name-user">
                     {{ group_member }}
                 </a>
+                {% else %}
+                <a href="{% url 'group-info' group.uuid %}" class="name-user">
+                    {{ group_member }}
+                </a>
+                {% endif %}
+
 
                 <a href="{% url 'delete-chat' group.uuid %}" class="delete-chat-btn">
                     Delete chat

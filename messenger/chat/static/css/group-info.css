@@ -1,0 +1,153 @@
+.group-info-card {
+    width: 100%;
+    max-width: 550px;
+    margin: 50px auto;
+    padding: 30px;
+
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Название группы */
+
+.group-header {
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.group-header h2 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 600;
+    color: #212529;
+}
+
+.group-type {
+    display: inline-block;
+    margin-top: 7px;
+    padding: 4px 9px;
+
+    font-size: 12px;
+    color: #6c757d;
+    background: #f1f3f5;
+    border-radius: 6px;
+}
+
+/* Заголовок участников */
+
+.members-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin: 22px 0 12px;
+}
+
+.members-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.members-header span {
+    padding: 3px 9px;
+
+    font-size: 13px;
+    color: #6c757d;
+    background: #f1f3f5;
+    border-radius: 20px;
+}
+
+/* Участник */
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 12px 5px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.member-item:last-child {
+    border-bottom: none;
+}
+
+.member-avatar {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+    background: #0d6efd;
+    color: white;
+
+    font-weight: 600;
+}
+
+.member-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.member-info a {
+    color: #212529;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.member-info a:hover {
+    color: #0d6efd;
+}
+
+.member-role {
+    padding: 3px 7px;
+
+    font-size: 11px;
+    color: #0d6efd;
+    background: #e7f1ff;
+    border-radius: 5px;
+}
+
+/* Если участников нет */
+
+.no-members {
+    margin: 10px 0;
+    color: #6c757d;
+}
+
+/* Кнопка назад */
+
+.back-button {
+    display: block;
+
+    margin-top: 25px;
+    padding: 10px;
+
+    text-align: center;
+    text-decoration: none;
+
+    color: white;
+    background: rgb(59, 113, 202);
+    border-radius: 8px;
+
+    font-weight: 500;
+
+    transition: 0.2s;
+}
+
+.back-button:hover {
+    color: rgb(59, 113, 202);
+    background: white;
+}

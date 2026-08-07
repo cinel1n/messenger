@@ -4,7 +4,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import ListView, TemplateView, FormView, DeleteView
+from django.views.generic import ListView, TemplateView, FormView, DeleteView, DetailView
 from .models import Group, User, GroupMemberModel, Event
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -54,6 +54,13 @@ class HomeView(LoginRequiredMixin, ListView):
         return context
 
 
+class GroupInfoView(DetailView):
+    model = Group
+    template_name = "group-info.html"
+
+    slug_field = "uuid"
+    slug_url_kwarg = "uuid"
+    
 
 class AccountsSearchView(LoginRequiredMixin, ListView):
     model = User

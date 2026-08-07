@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/group-info.css' %}">
+{% endblock %}
+
+{% block title %}{{object.name}}{% endblock%}
+
+{% block content %}
+
+<div class="group-info-card">
+
+    <div class="group-header">
+        <h2>{{ group.name }}</h2>
+        <span class="group-type">{{ group.get_type_display }}</span>
+    </div>
+
+    <div class="members-header">
+        <h3>Участники</h3>
+        <span>{{ group.members.count }}</span>
+    </div>
+
+    <div class="members-list">
+        {% for member in group.members.all %}
+            <div class="member-item">
+
+                <div class="member-avatar">
+                    {{ member.username|first|upper }}
+                </div>
+
+                <div class="member-info">
+                    <a href="{% url 'profile' member.username %}">
+                        {{ member.username }}
+                    </a>
+
+                    {% if member == group_member %}
+                        <span class="member-role">Вы</span>
+                    {% endif %}
+                </div>
+
+            </div>
+        {% empty %}
+            <p class="no-members">В группе пока нет участников.</p>
+        {% endfor %}
+    </div>
+
+    <a href="{% url 'group' group.uuid %}" class="back-button">
+        Вернуться к чату
+    </a>
+
+</div>
+
+{% endblock %}
