@@ -1,0 +1,57 @@
+.profile-card {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.profile-list {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.profile-item {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 18px;
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.profile-item:last-child {
+    border-bottom: none;
+}
+
+.field-value {
+    font-size: 17px;
+    font-weight: 500;
+    color: #212529;
+    word-break: break-word;
+}
+
+.type-field {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #6c757d;
+}
+
+.edit-profile-btn {
+    display: block;
+    margin-top: 20px;
+    padding: 11px 16px;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    background: rgb(59, 113, 202);
+    border-radius: 8px;
+    font-weight: 500;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.edit-profile-btn:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

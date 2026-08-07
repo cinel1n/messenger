@@ -1,0 +1,58 @@
+.tab-content {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 35px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.tab-pane form {
+    width: 100%;
+}
+
+.form-outline {
+    position: relative;
+}
+
+.form-outline input,
+.form-outline select,
+.form-outline textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-outline input:focus,
+.form-outline select:focus,
+.form-outline textarea:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+}
+
+.form-outline .form-label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 500;
+    color: #495057;
+}
+
+.form-outline .form-control {
+    margin-top: 5px;
+}
+
+.btn {
+    width: 100%;
+    padding: 11px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

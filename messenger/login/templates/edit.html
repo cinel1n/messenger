@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/edit.css' %}">
+{% endblock %}
+
 {% block title %}{{user}}{% endblock%}
 {% block content %}
 <div style="width: 25vw; margin: auto; margin-top: 10vh;">

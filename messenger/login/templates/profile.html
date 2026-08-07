@@ -1,25 +1,40 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
 {% block title %}{{object.username}}{% endblock%}
 {% block content %}
-<div style="width: 25vw; margin: auto; margin-top: 10vh;">
 
+<div class="profile-card">
+    <ul class="list-group profile-list">
 
-        <div class="tab-content">
-            <ul class="list-group">
-                <li class="list-group-item">{{object.username}}</li>
-                {% if object.first_name %}
-                <li class="list-group-item">{{object.first_name}}</li>
-                {% endif %}
-                
-                {% if object.last_name %}
-                <li class="list-group-item">{{object.last_name}}</li>
-                {%endif %}
-            </ul>
-            
-        </div>
-        <a href="{% url 'edit' %}" >Изменить данные</a>
-    </div>
+        <li class="list-group-item profile-item">
+            <span class="field-value">{{ object.username }}</span>
+            <span class="type-field">Username</span>
+        </li>
+
+        {% if object.first_name %}
+        <li class="list-group-item profile-item">
+            <span class="field-value">{{ object.first_name }}</span>
+            <span class="type-field">First Name</span>
+        </li>
+        {% endif %}
+
+        {% if object.last_name %}
+        <li class="list-group-item profile-item">
+            <span class="field-value">{{ object.last_name }}</span>
+            <span class="type-field">Last Name</span>
+        </li>
+        {% endif %}
+
+    </ul>
+
+    <a href="{% url 'edit' %}" class="edit-profile-btn">
+        Изменить данные
+    </a>
 </div>
-{%endblock%}
+
+{% endblock %}

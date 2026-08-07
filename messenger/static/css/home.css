@@ -2,7 +2,7 @@
     padding: 1vw 1.5vw;
 }
 body nav.bg-body-tertiary {
-    background-color: #3b71ca !important;
+    background-color: rgb(59, 113, 202) !important;
     color:white !important;
 
 }
@@ -12,6 +12,7 @@ body nav.bg-body-tertiary {
 nav{
     height: 6vh;
 }
+
 .user-messege{
     display: flex;
     font-size: 16px;
@@ -94,9 +95,9 @@ nav{
     align-items: center;
     margin-bottom: 0;
 }
-.mes-me p{
+/* .mes-me p{
 //background-color: #F5F5F5  ;
-}
+} */
 .text-block{
     min-height: 3vw;
 }
