@@ -4,7 +4,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import ListView, TemplateView, FormView
+from django.views.generic import ListView, TemplateView, FormView, DeleteView
 from .models import Group, User, GroupMemberModel, Event
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -68,6 +68,15 @@ class AccountsSearchView(LoginRequiredMixin, ListView):
         username = self.request.GET.get("search_user")
         context['search_username'] = username
         return context
+
+
+class DeleteChatView(DeleteView):
+    model = Group
+    success_url = "/"
+    template_name = "delete-chat.html"
+
+    slug_field = "uuid"
+    slug_url_kwarg = "uuid"
 
 
 def start_chat_view(request, username):

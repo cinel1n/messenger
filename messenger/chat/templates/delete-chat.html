@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/delete-chat.css' %}">
+{% endblock %}
+
+{% block title %}
+    Confirmation of chat deletion
+{% endblock %}
+
+{% block content %}
+
+<div class="delete-chat">
+    <div class="delete-chat-card">
+
+        <h2>Delete chat?</h2>
+
+        <p>
+            Are you sure you want to delete chat
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="delete-chat-actions">
+                <button type="submit" class="delete-btn">
+                    Yes, delete
+                </button>
+
+                <a href="{{ request.META.HTTP_REFERER }}" class="cancel-btn">
+                    Cancel
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

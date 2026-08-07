@@ -32,10 +32,15 @@ Messenger
     
     <div class="chat col-9">
         {% if group_member %}
-        <div class="user-messege user-current">
-          <h3 class="name-user">{{ group_member }}</h3>
+            <div class="user-messege user-current">
+                <a href="{% url 'profile' group_member %}" class="name-user">
+                    {{ group_member }}
+                </a>
 
-        </div>
+                <a href="{% url 'delete-chat' group.uuid %}" class="delete-chat-btn">
+                    Delete chat
+                </a>
+            </div>
 
 
       <div class="chat-mess" style="margin-top:1vh" >

@@ -1,0 +1,63 @@
+.delete-chat {
+    min-height: 70vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.delete-chat-card {
+    width: 100%;
+    max-width: 450px;
+    padding: 35px;
+    text-align: center;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.delete-chat-card h2 {
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+.delete-chat-card p {
+    margin-bottom: 25px;
+    color: #6c757d;
+}
+
+.delete-chat-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.delete-btn,
+.cancel-btn {
+    padding: 10px 22px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.delete-btn {
+    border: none;
+    background: #dc3545;
+    color: white;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background: #bb2d3b;
+}
+
+.cancel-btn {
+    background: #f1f3f5;
+    color: #212529;
+}
+
+.cancel-btn:hover {
+    background: #dee2e6;
+    color: #212529;
+}
