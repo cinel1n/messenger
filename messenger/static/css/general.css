@@ -1,19 +1,18 @@
-/* Контейнер формы поиска */
+
 form.d-flex {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-/* Выпадающий список результатов как в VK */
 .search-dropdown {
     position: absolute;
-    top: 100%; /* Прямо под строкой поиска */
+    top: 100%; 
     left: 0;
     width: 100%;
     margin-top: 5px;
-    z-index: 1050; /* Выше чем navbar */
-    display: none; /* Скрыт по умолчанию */
+    z-index: 1050; 
+    display: none; 
     animation: fadeIn 0.15s ease-out;
 }
 
@@ -117,4 +116,26 @@ form.d-flex {
 
 #search-results::-webkit-scrollbar-thumb:hover {
     background: #b8c1cc;
+}
+
+.users-messages, .chat{
+    padding: 1vw 1.5vw;
+}
+body nav.bg-body-tertiary {
+    background-color: rgb(59, 113, 202) !important;
+    color: white !important;
+}
+
+.navbar-brand,
+.navbar-nav .nav-link.active,
+.navbar-nav .nav-link.show {
+    color: white !important;
+}
+
+nav {
+    height: 6vh;
+}
+
+.input-group-text {
+    background-color: white;
 }

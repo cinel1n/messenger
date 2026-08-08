@@ -1,9 +1,66 @@
-.mess-btn{
-    display:flex;
-    background-color: rgb(59, 113, 202);
-    color:white;
-    height:5vh;
-    text-align: center;
-    margin-left:1vw;
+
+.search-user {
+    display: flex;
     align-items: center;
-        }
+
+    width: 90%;
+    max-width: 700px;
+    min-height: 70px;
+
+    margin: 10px auto;
+    padding: 10px 15px;
+
+    background-color: white;
+    border-radius: 10px;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.search-user .avatar-user {
+    width: 45px;
+    height: 45px;
+
+    margin-right: 15px;
+
+    border-radius: 50%;
+}
+
+.search-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.search-user-info .name-user {
+    margin: 0;
+}
+
+.search-user-info .last-message {
+    margin: 3px 0 0;
+}
+
+.mess-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 40px;
+    padding: 0 15px;
+    margin-left: 15px;
+
+    color: white;
+    background-color: rgb(59, 113, 202);
+
+    border: none;
+    border-radius: 7px;
+
+    white-space: nowrap;
+}
+
+.mess-btn:hover {
+    color: white;
+    background-color: rgb(45, 91, 170);
+}
+
+.search-user-info .name-user{
+    font-size:1vw;
+}
