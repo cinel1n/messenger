@@ -62,19 +62,23 @@ class GroupInfoView(DetailView):
     slug_url_kwarg = "uuid"
     
 
-class AccountsSearchView(LoginRequiredMixin, ListView):
-    model = User
-    template_name = "accounts.html"
+# class AccountsSearchView(LoginRequiredMixin, ListView):
+#     model = User
+#     template_name = "accounts.html"
 
-    def get_queryset(self):
-        users = User.objects.filter(username=self.request.GET.get("search_user"))
-        return users
+#     def get_queryset(self):
+#         users = User.objects.filter(username=self.request.GET.get("search_user"))
+#         return users
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        username = self.request.GET.get("search_user")
-        context['search_username'] = username
-        return context
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         username = self.request.GET.get("search_user")
+#         context['search_username'] = username
+#         return context
+
+def accounts_search_view(request):
+    username = request.GET.get('search_user')
+    return redirect("profile", username=username)
 
 
 class DeleteChatView(DeleteView):

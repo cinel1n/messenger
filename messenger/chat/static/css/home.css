@@ -49,18 +49,12 @@
     object-fit: cover;
 }
 
-
-/* Блок с username + последним сообщением */
-
 .users-messages .user-messege > div {
     flex: 1;
     min-width: 0;
 
     overflow: hidden;
 }
-
-
-/* Username */
 
 .users-messages .name-user {
     display: block;
@@ -80,7 +74,6 @@
 }
 
 
-/* Последнее сообщение */
 
 .users-messages .last-message {
     display: block;

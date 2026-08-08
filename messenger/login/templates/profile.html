@@ -35,6 +35,14 @@
     <a href="{% url 'edit' %}" class="edit-profile-btn">
         Change data
     </a>
+    {% else %}
+
+    <form method="POST" action="{% url 'user' user.username %}">
+        {% csrf_token %}
+        <button type="submit" class="btn mess-btn">
+            Написать
+        </button>
+    </form>
     {% endif %}
 </div>
 
