@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from .form import GroupForm
+from django.contrib import messages
 from django.db.models import Count
 
 class HomeView(LoginRequiredMixin, ListView):
@@ -36,7 +37,7 @@ class HomeView(LoginRequiredMixin, ListView):
             # members = group.members.all()
 
             context['group'] = group
-            context['messages'] = sorted_message_event_list
+            context['messages_event'] = sorted_message_event_list
             context['group_member'] = group.get_name(self.request.user)
 
         context["user"] = self.request.user
@@ -78,7 +79,13 @@ class GroupInfoView(DetailView):
 
 def accounts_search_view(request):
     username = request.GET.get('search_user')
-    return redirect("profile", username=username)
+    result = User.objects.filter(username=username)
+
+    if result.count() == 1:
+        return redirect("profile", username=username)
+
+    messages.error(request,"user not found")
+    return redirect(request.META.get("HTTP_REFERER", "home"))
 
 
 class DeleteChatView(DeleteView):

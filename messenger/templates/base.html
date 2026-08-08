@@ -62,11 +62,28 @@
     </div>
   </div>
   </nav>
+
+  {% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-danger search-message">
+            {{ message }}
+        </div>
+
+    {% endfor %}
+{% endif %}
+
     {% block content %}
     {% endblock%}
 <script type="text/javascript" src="{% static 'js/mdb.umd.min.js' %}"></script>
 <script type="text/javascript"></script>
 <script src="https://unpkg.com/htmx.org@2.0.7"></script>
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.search-message').forEach(message => {
+            message.remove();
+        });
+    }, 1500);
+</script>
 </body>
 
 </html>

@@ -139,3 +139,13 @@ nav {
 .input-group-text {
     background-color: white;
 }
+
+.search-message {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    z-index: 1050;
+
+
+}
+

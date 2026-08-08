@@ -56,7 +56,7 @@ Messenger
 
 
       <div class="chat-mess" style="margin-top:1vh" >
-        {% for mess in messages %}
+        {% for mess in messages_event %}
 
       {% if mess.type_content == "message" %}
         {% if mess.author == user %}

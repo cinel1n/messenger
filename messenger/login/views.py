@@ -62,6 +62,8 @@ class ProfileView(DetailView):
     slug_url_kwarg = 'username'
 
 
+
+
 # class LoginView(FormView):
 #     form_class = UserCreationForm
 #     template_name = "login.html"
