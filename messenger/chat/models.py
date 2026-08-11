@@ -53,6 +53,7 @@ class GroupMemberModel(models.Model):
     is_admin = models.BooleanField(default=False)
     joined_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
     last_read_at = models.DateTimeField(null=True, blank=True)
+    is_creator = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("group", "user")

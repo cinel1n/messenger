@@ -9,7 +9,7 @@
 
 {% block content %}
 
-<div class="group-info-card">
+<div class="group-info-card" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
     <div class="group-header">
         <h2>{{ group.name }}</h2>
@@ -17,36 +17,58 @@
     </div>
 
     <div class="members-header">
-        <h3>Участники</h3>
+        <h3>Members</h3>
         <span>{{ group.members.count }}</span>
     </div>
 
     <div class="members-list">
-        {% for member in group.members.all %}
+        {% for member in members_info %}
             <div class="member-item">
 
                 <div class="member-avatar">
-                    {{ member.username|first|upper }}
+                    {{ member.user.username|first|upper }}
                 </div>
 
                 <div class="member-info">
-                    <a href="{% url 'profile' member.username %}">
-                        {{ member.username }}
+                    <a href="{% url 'profile' member.user.username %}">
+                        {{ member.user.username }}
                     </a>
-
-                    {% if member == group_member %}
-                        <span class="member-role">Вы</span>
+                    {% if member.user == request.user %}
+                        <span class="member-role">You</span>
                     {% endif %}
-                </div>
+                    {% if member.is_creator %}
+                        <span class="member-role">Creator</span>
+                    {% elif member.is_admin %}
+                        <span class="member-role">Admin</span>
+                    {% endif %}
 
+                </div>
+                {% if member.user == request.user %}
+                <button hx-delete="{% url 'delete-group-member' member.id %}"
+                    hx-confirm="Are you sure you want to leave the chat?"
+
+                >go out</button>
+
+                {% elif not member.is_creator and current_groupmember.is_creator %}
+
+                <button hx-delete="{% url 'delete-group-member' member.id %}"
+                    hx-confirm="Are you sure you want to delete the user? "
+
+                >delete user</button>
+
+                {% elif current_groupmember.is_admin or current_groupmember.is_creator and not member.is_admin  %}
+                <button hx-delete="{% url 'delete-group-member' member.id %}"
+                    hx-confirm="Are you sure you want to delete the user? "
+
+                >delete user</button>
+
+                {% endif %}
             </div>
-        {% empty %}
-            <p class="no-members">В группе пока нет участников.</p>
         {% endfor %}
     </div>
 
     <a href="{% url 'group' group.uuid %}" class="back-button">
-        Вернуться к чату
+        Return to chat
     </a>
 
 </div>

@@ -61,21 +61,16 @@ class GroupInfoView(DetailView):
 
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        group = kwargs.get('object')
+        current_groupmember = GroupMemberModel.objects.get(user=self.request.user, group=group)
+        
+        context['current_groupmember'] = current_groupmember
+        context['members_info'] = GroupMemberModel.objects.filter(group=group)
+        return context
     
-
-# class AccountsSearchView(LoginRequiredMixin, ListView):
-#     model = User
-#     template_name = "accounts.html"
-
-#     def get_queryset(self):
-#         users = User.objects.filter(username=self.request.GET.get("search_user"))
-#         return users
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         username = self.request.GET.get("search_user")
-#         context['search_username'] = username
-#         return context
 
 def accounts_search_view(request):
     username = request.GET.get('search_user')
@@ -86,6 +81,14 @@ def accounts_search_view(request):
 
     messages.error(request,"user not found")
     return redirect(request.META.get("HTTP_REFERER", "home"))
+
+
+@require_http_methods(['DELETE'])
+def delete_group_member(request, id):
+    user = request.user
+    member = GroupMemberModel.objects.get(id=id)
+    member.delete() 
+    
 
 
 class DeleteChatView(DeleteView):
@@ -128,7 +131,8 @@ class CreateGroupView(FormView):
         GroupMemberModel.objects.create(
             group=group, 
             user=self.request.user,  # добавляется в модель GroupModel
-            is_admin=True
+            is_admin=True, 
+            creator=True
         )
         for user in form.cleaned_data["members"]:
             GroupMemberModel.objects.create(
