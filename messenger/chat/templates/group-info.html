@@ -23,7 +23,7 @@
 
     <div class="members-list">
         {% for member in members_info %}
-            <div class="member-item">
+            <div class="member-item" id="member-{{member.id}}">
 
                 <div class="member-avatar">
                     {{ member.user.username|first|upper }}
@@ -46,20 +46,23 @@
                 {% if member.user == request.user %}
                 <button hx-delete="{% url 'delete-group-member' member.id %}"
                     hx-confirm="Are you sure you want to leave the chat?"
-
+                    hx-target="#member-{{member.id}}"
+                    hx-swap="innerHTML"
                 >go out</button>
 
                 {% elif not member.is_creator and current_groupmember.is_creator %}
 
                 <button hx-delete="{% url 'delete-group-member' member.id %}"
                     hx-confirm="Are you sure you want to delete the user? "
-
+                    hx-target="#member-{{member.id}}"
+                    hx-swap="innerHTML"
                 >delete user</button>
 
                 {% elif current_groupmember.is_admin or current_groupmember.is_creator and not member.is_admin  %}
                 <button hx-delete="{% url 'delete-group-member' member.id %}"
                     hx-confirm="Are you sure you want to delete the user? "
-
+                    hx-target="#member-{{member.id}}"
+                    hx-swap="innerHTML"
                 >delete user</button>
 
                 {% endif %}

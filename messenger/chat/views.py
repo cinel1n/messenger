@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from .form import GroupForm
 from django.contrib import messages
+from django.http import HttpResponse
 from django.db.models import Count
 
 class HomeView(LoginRequiredMixin, ListView):
@@ -64,8 +65,8 @@ class GroupInfoView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        group = kwargs.get('object')
-        current_groupmember = GroupMemberModel.objects.get(user=self.request.user, group=group)
+        group = self.object
+        current_groupmember = get_object_or_404(GroupMemberModel, user=self.request.user, group=group)
         
         context['current_groupmember'] = current_groupmember
         context['members_info'] = GroupMemberModel.objects.filter(group=group)
@@ -85,11 +86,18 @@ def accounts_search_view(request):
 
 @require_http_methods(['DELETE'])
 def delete_group_member(request, id):
-    user = request.user
-    member = GroupMemberModel.objects.get(id=id)
-    member.delete() 
-    
+    user = request.user  # who deletes
+    member = get_object_or_404(GroupMemberModel, id=id) # the one who is being removed
+    group = member.group
 
+    user_gm = get_object_or_404(GroupMemberModel, user=user, group=group) # who deletes
+    
+    if user_gm.is_creator or (user_gm.is_admin and not member.is_admin):
+        member.delete() 
+        return HttpResponse("")
+    
+    return HttpResponse("You cannot delete this user", status=403)
+    
 
 class DeleteChatView(DeleteView):
     model = Group
@@ -132,7 +140,7 @@ class CreateGroupView(FormView):
             group=group, 
             user=self.request.user,  # добавляется в модель GroupModel
             is_admin=True, 
-            creator=True
+            is_creator=True
         )
         for user in form.cleaned_data["members"]:
             GroupMemberModel.objects.create(
