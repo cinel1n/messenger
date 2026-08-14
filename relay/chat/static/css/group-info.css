@@ -151,3 +151,36 @@
     color: rgb(59, 113, 202);
     background: white;
 }
+
+.delete-button-member {
+    border: none;
+    background-color: rgb(169, 44, 44);
+    color: white;
+
+    padding: 7px 14px;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+.admin-button-member{
+    border: none;
+    background-color: rgb(44, 169, 61);
+    color: white;
+
+    padding: 7px 14px;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+
+}
+

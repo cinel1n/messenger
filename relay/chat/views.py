@@ -98,6 +98,19 @@ def delete_group_member(request, id):
     
     return HttpResponse("You cannot delete this user", status=403)
     
+@require_http_methods(["POST"])
+def admin_group_member(request, id):
+    user = request.user
+    member = get_object_or_404(GroupMemberModel, id=id) 
+    group = member.group
+
+    user_gm = get_object_or_404(GroupMemberModel, user=user, group=group) 
+
+    if user_gm.is_admin or user_gm.is_creator:
+        member.is_admin = True
+        member.save()
+        return HttpResponse("")
+    return HttpResponse("You don't have righs")
 
 class DeleteChatView(DeleteView):
     model = Group

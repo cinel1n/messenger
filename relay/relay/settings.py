@@ -60,7 +60,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
-ROOT_URLCONF = 'messenger.urls'
+ROOT_URLCONF = 'relay.urls'
 
 TEMPLATES = [
     {
@@ -77,8 +77,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'messenger.wsgi.application'
-ASGI_APPLICATION = 'messenger.asgi.application'
+WSGI_APPLICATION = 'relay.wsgi.application'
+ASGI_APPLICATION = 'relay.asgi.application'
 
 
 # Database

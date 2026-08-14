@@ -15,7 +15,7 @@ from chat import routing
 from channels.security.websocket import AllowedHostsOriginValidator
 from channels.auth import AuthMiddlewareStack
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'messenger.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'relay.settings')
 
 asgi_application = get_asgi_application()
 
