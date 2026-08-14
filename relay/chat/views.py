@@ -4,7 +4,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import ListView, TemplateView, FormView, DeleteView, DetailView
+from django.views.generic import ListView, TemplateView, FormView, DeleteView, DetailView, UpdateView
 from .models import Group, User, GroupMemberModel, Event
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -73,6 +73,35 @@ class GroupInfoView(DetailView):
         return context
     
 
+class GroupEditView(UpdateView):
+    model = Group
+    template_name = "group-edit.html"
+    fields = ["name",]
+    slug_field = "uuid"
+    slug_url_kwarg = "uuid"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        group = self.object
+        current_groupmember = get_object_or_404(GroupMemberModel, user=self.request.user, group=group)
+        
+        context['current_groupmember'] = current_groupmember
+        context['members_info'] = GroupMemberModel.objects.filter(group=group)
+        return context
+    
+    def despatch(self, request, *args, **kwargs): 
+        # rights check
+        group = self.get_object()
+        member = get_object_or_404(
+            GroupMemberModel, 
+            group=group, 
+            user=request.user
+        )
+        if not (member.is_admin or member.is_creator):
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
+        
+
 def accounts_search_view(request):
     username = request.GET.get('search_user')
     result = User.objects.filter(username=username)
@@ -107,7 +136,7 @@ def admin_group_member(request, id):
     user_gm = get_object_or_404(GroupMemberModel, user=user, group=group) 
 
     if user_gm.is_admin or user_gm.is_creator:
-        member.is_admin = True
+        member.is_admin = True if not member.is_admin else False
         member.save()
         return HttpResponse("")
     return HttpResponse("You don't have righs")

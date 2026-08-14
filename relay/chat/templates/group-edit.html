@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/group-info.css' %}">
+{% endblock %}
+
+{% block title %}{{object.name}}{% endblock%}
+
+{% block content %}
+
+<div class="group-info-card" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+
+<form method="POST" class="group-edit-form">
+    {% csrf_token %}
+
+    {% for field in form %}
+        <div class="group-header">
+            <label class="form-label" for="{{ field.id_for_label }}">
+                {{ field.label }}
+            </label>
+
+            {{ field }}
+
+            {% if field.errors %}
+                <div class="text-danger">
+                    {{ field.errors }}
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    <button type="submit">
+        Сохранить
+    </button>
+</form>
+
+    <div class="members-header">
+        <h3>Members</h3>
+        <span>{{ group.members.count }}</span>
+    </div>
+<div id="notification"></div>
+    <div class="members-list">
+        {% for member in members_info %}
+            <div class="member-item" id="member-{{member.id}}">
+
+                <div class="member-avatar">
+                    {{ member.user.username|first|upper }}
+                </div>
+
+                <div class="member-info">
+                    <a href="{% url 'profile' member.user.username %}">
+                        {{ member.user.username }}
+                    </a>
+                    {% if member.user == request.user %}
+                        <span class="member-role">You</span>
+                    {% endif %}
+                    {% if member.is_creator %}
+                        <span class="member-role">Creator</span>
+                    {% elif member.is_admin %}
+                        <span class="member-role">Admin</span>
+                    {% endif %}
+
+                </div>
+                
+
+                <button hx-delete="{% url 'delete-group-member' member.id %}"
+                    hx-confirm="Are you sure you want to delete the user? "
+                    hx-target="#member-{{member.id}}"
+                    hx-swap="innerHTML"
+                    class="delete-button-member"
+                >{% if member.user == request.user %}go out{%else%}delete user{% endif%}</button>
+
+
+                 {%if not member.is_creator%}
+                <button hx-post="{% url 'admin-group-member' member.id %}"
+                    hx-target="#notification"
+                    hx-swap="afterbegin"
+                    class="{%if not member.is_admin %}admin-button-member{% else %}no-admin-button-member{%endif%}"
+                    
+                >{%if not  member.is_admin %}make admin{% else %}delete admin{%endif%}</button>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <a href="{% url 'group' group.uuid %}" class="back-button">
+        Return to chat
+    </a>
+
+</div>
+
+{% endblock %}

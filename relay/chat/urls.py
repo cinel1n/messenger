@@ -8,7 +8,9 @@ urlpatterns = [
     path("user/<str:username>", start_chat_view, name="user"),
     path("create-group", CreateGroupView.as_view(), name='create_group'),
     path("delete-chat/<str:uuid>", DeleteChatView.as_view(), name='delete-chat'),
-    path("group-info/<str:uuid>", GroupInfoView.as_view(), name="group-info"),
-    path("group-member/delete/<int:id>", delete_group_member, name="delete-group-member"),
-    path("group-member/admin/<int:id>", admin_group_member, name="admin-group-member"),
+    path("group/info/<str:uuid>", GroupInfoView.as_view(), name="group-info"),
+    path("group/member/delete/<int:id>", delete_group_member, name="delete-group-member"),
+    path("group/member/admin/<int:id>", admin_group_member, name="admin-group-member"),
+    path("group/edit/<str:uuid>",  GroupEditView.as_view(), name="group-edit"),
+    # path("group/add-member/<str:uuid>",  GroupEditView.as_view(), name="group-edit"),
 ]
