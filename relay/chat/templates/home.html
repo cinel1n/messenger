@@ -48,10 +48,11 @@ Messenger
                 </a>
                 {% endif %}
 
-
+                {% if is_delete %}
                 <a href="{% url 'delete-chat' group.uuid %}" class="delete-chat-btn">
                     Delete chat
                 </a>
+                {% endif %}
             </div>
 
 

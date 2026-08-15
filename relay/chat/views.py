@@ -35,7 +35,11 @@ class HomeView(LoginRequiredMixin, ListView):
             events = group.event_set.all()
             message_and_event_list = [*messages, *events]
             sorted_message_event_list = sorted(message_and_event_list, key=lambda x: x.timestamp)
-            # members = group.members.all()
+            member_group = get_object_or_404(GroupMemberModel, group=group, user=self.request.user)
+
+            context["is_delete"] = False
+            if group.type == group.GroupType.PRIVATE or member_group.is_creator:
+                context["is_delete"] = True
 
             context['group'] = group
             context['messages_event'] = sorted_message_event_list
@@ -141,6 +145,7 @@ def admin_group_member(request, id):
         return HttpResponse("")
     return HttpResponse("You don't have righs")
 
+
 class DeleteChatView(DeleteView):
     model = Group
     success_url = "/"
@@ -149,6 +154,15 @@ class DeleteChatView(DeleteView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
 
+    def dispatch(self, request, *args, **kwargs):
+        user = self.request.user
+        group = self.get_object()
+        group_member = get_object_or_404(GroupMemberModel, user=user, group=group)
+
+        if group_member.is_creator or group.type == group.GroupType.PRIVATE:
+            return super().dispatch(request, *args, **kwargs)
+
+        return HttpResponseForbidden()
 
 def start_chat_view(request, username):
     user = get_object_or_404(User, username=username)

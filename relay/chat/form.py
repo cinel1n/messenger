@@ -4,12 +4,12 @@ from login.models import User
 
 
 class GroupForm(forms.ModelForm):
-    name = forms.CharField(max_length=50, label="Название группы", widget=forms.TextInput(attrs={"class":"form-control"}))
+    name = forms.CharField(max_length=50, label="Name group", widget=forms.TextInput(attrs={"class":"form-control"}))
     members = forms.ModelMultipleChoiceField(
         queryset=User.objects.none(), 
         widget=forms.CheckboxSelectMultiple,
         required=True, 
-        label="Участники"
+        label="Members"
     )
 
     class Meta:
