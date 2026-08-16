@@ -9,13 +9,17 @@ from .models import Event, Message, Group
 
 class GroupConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        print("CONNECT")
+
         self.group_uuid = str(self.scope["url_route"]["kwargs"]["uuid"])
         self.group = await database_sync_to_async(Group.objects.get)(uuid=self.group_uuid)
         await self.channel_layer.group_add( # добавление в слой
             self.group_uuid, self.channel_name) # channel_name - адрес websocket соединения
 
         self.user = self.scope["user"]
+        print("ACCEPT")
         await self.accept() # установление соединения
+        
 
     async def receive(self, text_data=None, bytes_data=None):
         """
@@ -69,3 +73,11 @@ class GroupConsumer(AsyncWebsocketConsumer):
             "user": user
         }
         await self.send(json.dumps(returned_data))
+
+    async def disconnect(self, close_code):
+        print("DISCONNECT:", close_code)
+
+        await self.channel_layer.group_discard(
+            self.group_uuid,
+            self.channel_name
+        )

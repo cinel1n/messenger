@@ -1,11 +1,20 @@
 from django.contrib import admin
 from .models import *
 
+
 class MessageAdmin(admin.ModelAdmin):
     list_display = ['author', 'content']
 
+
+class GroupMemberInline(admin.TabularInline):
+    model = GroupMemberModel
+    extra = 0
+
+
 class GroupAdmin(admin.ModelAdmin):
     list_display = ['name', 'type']
+    inlines = [GroupMemberInline]
+
 
 class GroupMemberAdmin(admin.ModelAdmin):
     list_display = ['group', 'user', 'is_admin']

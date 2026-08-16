@@ -9,15 +9,18 @@ class GroupForm(forms.ModelForm):
         queryset=User.objects.none(), 
         widget=forms.CheckboxSelectMultiple,
         required=True, 
-        label="Members"
+        label="Add members"
     )
 
     class Meta:
         model = Group
-        fields = ["name"]
+        fields = ["name",]
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, members_queryset=None, edit=False, **kwargs):
         super().__init__(*args, **kwargs)
-        if user:
-            groups = user.group_set.all()
-            self.fields["members"].queryset = User.objects.filter(group__in=groups).exclude(id=user.id).distinct()
+        if members_queryset:
+            self.fields["members"].queryset = members_queryset
+        if edit:
+            self.fields["members"].required = False
+            
+        

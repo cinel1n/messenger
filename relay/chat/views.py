@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from .form import GroupForm
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Count
 
 class HomeView(LoginRequiredMixin, ListView):
@@ -79,8 +79,10 @@ class GroupInfoView(DetailView):
 
 class GroupEditView(UpdateView):
     model = Group
+    # fields = ['name']
+    success_url = "/"
     template_name = "group-edit.html"
-    fields = ["name",]
+    form_class = GroupForm
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
 
@@ -104,7 +106,30 @@ class GroupEditView(UpdateView):
         if not (member.is_admin or member.is_creator):
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
-        
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        user = self.request.user  
+        group = self.get_object()
+        groups = user.group_set.all()
+
+        users = User.objects.filter(group__in=groups).exclude(id=user.id).exclude(
+            groupmembermodel__group=group
+        ).distinct()
+        kwargs['members_queryset'] = users
+        kwargs['edit'] = True
+        return kwargs
+    
+    def form_valid(self, form):
+        group = self.get_object()
+        group.name = form.cleaned_data["name"]
+        group.save()
+        for member in form.cleaned_data["members"]:
+            GroupMemberModel.objects.create(group=group, user=member)
+            Event.objects.create(type="Join", user=member, group=group)
+
+        return HttpResponseRedirect(self.get_success_url())
+
 
 def accounts_search_view(request):
     username = request.GET.get('search_user')
@@ -127,6 +152,7 @@ def delete_group_member(request, id):
     
     if user_gm.is_creator or (user_gm.is_admin and not member.is_admin):
         member.delete() 
+        Event.objects.create(type="Left", user=member, group=group)
         return HttpResponse("")
     
     return HttpResponse("You cannot delete this user", status=403)
@@ -206,9 +232,17 @@ class CreateGroupView(FormView):
             Event.objects.create(type="Join", user=user, group=group)
         return super().form_valid(form)
 
-    # передает юзера в форму
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user  
+        user = self.request.user  
+        groups = user.group_set.all()
+
+        kwargs["members_queryset"] = (
+            User.objects
+            .filter(group__in=groups)
+            .exclude(id=user.id)
+            .distinct()
+        )
+
         return kwargs
 

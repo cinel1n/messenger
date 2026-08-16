@@ -139,6 +139,9 @@ Messenger
 
         chatWebSocket.onclose = function (e) {
             console.error('Chat socket closed')
+            console.log("code:", e.code)
+            console.log("reason:", e.reason)
+            console.log("clean:", e.wasClean)
         }
 
         chatWebSocket.onerror = function(e) {

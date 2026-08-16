@@ -263,34 +263,3 @@
     color: #212529;
 }
 
-#id_members {
-    width: 100%;
-    min-height: 120px;
-    padding: 6px;
-
-    border: 1px solid #dee2e6;
-    border-radius: 7px;
-
-    background-color: #fff;
-    color: #212529;
-
-    font-size: 14px;
-    outline: none;
-
-    transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-#id_members:focus {
-    border-color: rgb(59, 113, 202);
-    box-shadow: 0 0 0 2px rgba(59, 113, 202, 0.12);
-}
-
-#id_members option {
-    padding: 8px 10px;
-    border-radius: 5px;
-}
-
-#id_members option:checked {
-    background-color: rgb(59, 113, 202);
-    color: white;
-}
