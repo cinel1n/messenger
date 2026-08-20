@@ -41,7 +41,7 @@
         </li>
         
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="{% url 'profile' user.username %}">{{ user.username }}</a>
+          <a class="nav-link active" aria-current="page" href="{% url 'profile' user.username %}">{{ user.first_name }}</a>
         </li>
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="{% url 'logout' %}" >Exit</a>

@@ -52,7 +52,8 @@ class HomeView(LoginRequiredMixin, ListView):
             if group.type == group.GroupType.PUBLIC:
                 group_list.append([group.name, group])
             else:
-                group_name = [i for i in group.members.all() if i != self.request.user][0].username
+                member = [i for i in group.members.all() if i != self.request.user][0]
+                group_name = f"{member.first_name} {member.last_name}"
                 group_list.append([group_name, group])
 
         context['groups'] = group_list
@@ -95,7 +96,7 @@ class GroupEditView(UpdateView):
         context['members_info'] = GroupMemberModel.objects.filter(group=group)
         return context
     
-    def despatch(self, request, *args, **kwargs): 
+    def dispatch(self, request, *args, **kwargs): 
         # rights check
         group = self.get_object()
         member = get_object_or_404(
@@ -152,7 +153,7 @@ def delete_group_member(request, id):
     
     if user_gm.is_creator or (user_gm.is_admin and not member.is_admin):
         member.delete() 
-        Event.objects.create(type="Left", user=member, group=group)
+        Event.objects.create(type="Left", user=member.user, group=group)
         return HttpResponse("")
     
     return HttpResponse("You cannot delete this user", status=403)
@@ -165,10 +166,16 @@ def admin_group_member(request, id):
 
     user_gm = get_object_or_404(GroupMemberModel, user=user, group=group) 
 
-    if user_gm.is_admin or user_gm.is_creator:
+    if user_gm.is_creator:
         member.is_admin = True if not member.is_admin else False
         member.save()
         return HttpResponse("")
+
+    elif user_gm.is_admin and not member.is_admin:
+        member.is_admin = True
+        member.save()
+        return HttpResponse("")
+        
     return HttpResponse("You don't have righs")
 
 
