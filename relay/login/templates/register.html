@@ -15,9 +15,8 @@
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="pills-register" role="tabpanel" aria-labelledby="tab-register">
-                <form method="post">
+                <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
-
 
                     {% for field in form %}
 

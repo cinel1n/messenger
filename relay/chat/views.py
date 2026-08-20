@@ -46,15 +46,26 @@ class HomeView(LoginRequiredMixin, ListView):
             context['group_member'] = group.get_name(self.request.user)
 
         context["user"] = self.request.user
+
+        avatar = None
         group_list = []
 
-        for group in self.model.objects.filter(members=self.request.user):
+        for group in self.object_list:
             if group.type == group.GroupType.PUBLIC:
-                group_list.append([group.name, group])
+                data = {
+                    "name": group.name, 
+                    "group": group, 
+                    "avatar":avatar, 
+                }
+
             else:
-                member = [i for i in group.members.all() if i != self.request.user][0]
-                group_name = f"{member.first_name} {member.last_name}"
-                group_list.append([group_name, group])
+                member = group.get_name(self.request.user)
+                data = {
+                    "name": member.first_name, 
+                    "group": group, 
+                    "avatar":member.avatar.url, 
+                }
+            group_list.append(data)
 
         context['groups'] = group_list
 

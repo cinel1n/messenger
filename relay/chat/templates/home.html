@@ -7,24 +7,24 @@
 
 
 {% block title %}
-Messenger
+Home
 {% endblock%}
 {% block content %}
 <div class="chats row">
   <div class="users-messages col-3">
 
-    {% for name, group in groups %}
-    <a class="user-messege" id="{{group.uuid}}" href="{% url 'group' group.uuid %}">
-      <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
+    {% for group in groups %}
+    <a class="user-messege" id="{{group.group.uuid}}" href="{% url 'group' group.group.uuid %}">
+      <!-- <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}"> -->
+       {% if group.avatar %}
+       <img class="avatar-user" src="{{group.avatar}}">
+       {% else%}
+        <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
+       {% endif %}
       <div>
-
-        <h3 class="name-user">{{name}}</h3>
-
-        
+        <h3 class="name-user">{{group.name}}</h3>
         <p class="last-message text-truncate">
-            {% if group.last_message %}
-            {{group.last_message}}
-            {% endif %}
+            {{group.group.last_message}}
         </p>
 
       </div>
@@ -39,7 +39,7 @@ Messenger
         {% if group_member %}
             <div class="user-messege user-current">
                 {% if group.type != group.GroupType.PUBLIC %}
-                <a href="{% url 'profile' group_member %}" class="name-user">
+                <a href="{% url 'profile' group_member.username %}" class="name-user">
                     {{ group_member }}
                 </a>
                 {% else %}

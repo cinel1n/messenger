@@ -1,6 +1,9 @@
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 
 
 class ProfileForm(forms.ModelForm):
@@ -33,9 +36,9 @@ class CreateUserForm(UserCreationForm):
             'class': 'form-control',
             'id': "registerRepeatPassword",
         }))
-
+    avatar = forms.ImageField(required=False)
     data_entry = forms.BooleanField(required=True, label=' I have read and agree to the terms', widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'data_entry')
+        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'avatar', 'data_entry')
