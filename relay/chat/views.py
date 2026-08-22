@@ -47,7 +47,6 @@ class HomeView(LoginRequiredMixin, ListView):
 
         context["user"] = self.request.user
 
-        avatar = None
         group_list = []
 
         for group in self.object_list:
@@ -55,7 +54,7 @@ class HomeView(LoginRequiredMixin, ListView):
                 data = {
                     "name": group.name, 
                     "group": group, 
-                    "avatar":avatar, 
+                    "avatar":group.avatar, 
                 }
 
             else:
@@ -63,7 +62,7 @@ class HomeView(LoginRequiredMixin, ListView):
                 data = {
                     "name": member.first_name, 
                     "group": group, 
-                    "avatar":member.avatar.url, 
+                    "avatar":member.avatar, 
                 }
             group_list.append(data)
 
@@ -133,7 +132,9 @@ class GroupEditView(UpdateView):
     
     def form_valid(self, form):
         group = self.get_object()
+
         group.name = form.cleaned_data["name"]
+        group.avatar = form.cleaned_data["avatar"]
         group.save()
         for member in form.cleaned_data["members"]:
             GroupMemberModel.objects.create(group=group, user=member)

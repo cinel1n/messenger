@@ -52,7 +52,6 @@ class ProfileEditView(UpdateView):
         return self.request.user
         
 
-
 class ProfileView(DetailView):
     model = User
     template_name = "profile.html"

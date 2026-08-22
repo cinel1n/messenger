@@ -11,12 +11,18 @@
 
 <div class="group-info-card" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
-    <form>
+    {% if object.avatar %}
+    <img
+    src="{{ object.avatar.url }}"
+    alt="Avatar"
+    class="profile-avatar-preview"
+    >
+    {% endif %}
     <div class="group-header">
         <h2>{{ group.name }}</h2>
         <span class="group-type">{{ group.get_type_display }}</span>
     </div>
-    </form>
+    
 
     <div class="members-header">
         <h3>Members</h3>
@@ -28,7 +34,14 @@
             <div class="member-item" id="member-{{member.id}}">
 
                 <div class="member-avatar">
-                    {{ member.user.username|first|upper }}
+                    
+                    {% if member.user.avatar %}
+                        <img
+                        src="{{ member.user.avatar.url }}"
+                        alt="Avatar"
+                        class="profile-avatar-preview"
+                        >
+                    {% endif %}
                 </div>
 
                 <div class="member-info">

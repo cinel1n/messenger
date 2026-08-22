@@ -15,6 +15,7 @@ class Group(models.Model):
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
     name = models.CharField(max_length=30, blank=True)
     members = models.ManyToManyField(User, through='GroupMemberModel')
+    avatar = models.ImageField(upload_to="avatars/", blank=True, default="")
     type = models.CharField(max_length=10, choices=GroupType.choices, default=GroupType.PRIVATE)
 
 

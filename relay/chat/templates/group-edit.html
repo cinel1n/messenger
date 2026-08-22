@@ -11,9 +11,15 @@
 
 <div class="group-info-card" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
-<form method="POST" class="group-edit-form">
+<form method="POST" class="group-edit-form" enctype="multipart/form-data">
         {% csrf_token %}
-    
+        {% if object.avatar%}
+        <img
+            src="{{ object.avatar.url }}"
+            alt="Avatar"
+            class="profile-avatar-preview"
+        >
+        {% endif %}
         {% for field in form %}
             <div class="tab-pane">
                 <label class="form-label" for="{{ field.id_for_label }}">
@@ -44,7 +50,14 @@
             <div class="member-item" id="member-{{member.id}}">
 
                 <div class="member-avatar">
-                    {{ member.user.username|first|upper }}
+                    
+                    {% if member.user.avatar %}
+                        <img
+                        src="{{ member.user.avatar.url }}"
+                        alt="Avatar"
+                        class="profile-avatar-preview"
+                        >
+                    {% endif %}
                 </div>
 
                 <div class="member-info">
