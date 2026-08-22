@@ -5,11 +5,10 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name' ]
+        fields = ['username', 'first_name', 'last_name', 'avatar', 'email']
 
     def  __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -17,6 +16,7 @@ class ProfileForm(forms.ModelForm):
             self.initial['first_name'] = user.first_name
             self.initial['last_name'] = user.last_name
             self.initial['username'] = user.username
+            self.initial['avatar'] = user.avatar
 
 class LoginUserForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'id':"loginName"}), label="Username", max_length=15)

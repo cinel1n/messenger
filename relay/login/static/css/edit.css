@@ -56,3 +56,77 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+.profile-avatar-preview {
+    display: block;
+    width: 120px;
+    height: 120px;
+
+    margin: 0 auto 20px;
+
+    object-fit: cover;
+
+    border-radius: 50%;
+
+    border: 2px solid #dee2e6;
+}
+/* Блок текущей аватарки и загрузки новой */
+
+.form-outline:has(#id_avatar) {
+    padding: 12px 14px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.form-outline:has(#id_avatar) > a {
+    display: inline-block;
+    margin: 0 0 10px 0;
+    color: rgb(59, 113, 202);
+    font-size: 14px;
+    text-decoration: none;
+    word-break: break-word;
+}
+
+.form-outline:has(#id_avatar) > a:hover {
+    text-decoration: underline;
+}
+
+.form-outline:has(#id_avatar) input[type="checkbox"] {
+    margin: 0 6px 0 4px;
+    accent-color: rgb(59, 113, 202);
+}
+
+.form-outline:has(#id_avatar) label[for="avatar-clear_id"] {
+    display: inline;
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+}
+
+.form-outline:has(#id_avatar) input[type="file"] {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 7px 10px;
+
+    border: 1px solid #dee2e6;
+    border-radius: 7px;
+
+    background-color: #fff;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+}
+
+.form-outline:has(#id_avatar) input[type="file"]:focus {
+    outline: none;
+    border-color: rgb(59, 113, 202);
+}
+
+.form-outline:has(#id_avatar) label[for="id_avatar"] {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #555;
+}

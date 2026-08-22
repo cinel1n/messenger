@@ -1,15 +1,18 @@
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, UpdateView
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, authenticate
 from .form import LoginUserForm, CreateUserForm, ProfileForm
+from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
-from .models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class LoginUserView(LoginView):
@@ -36,22 +39,24 @@ def logout_(request):
     return redirect('log')
 
 
-class ProfileEditView(FormView):
+class ProfileEditView(UpdateView):
     form_class = ProfileForm
     model = User
     template_name = "edit.html"
     success_url = "/"
 
-    def form_valid(self, form):
-        form = form.save()
-        return super().form_valid(form)
+    slug_field = "username"
+    slug_url_kwarg = "username"
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        kwargs['instance'] = self.request.user
-        return kwargs
+    def get_object(self, queryset=None): 
+        return self.request.user
+
+    # def get_form_kwargs(self):
+    #     kwargs = super().get_form_kwargs()
+    #     kwargs['instance'] = self.request.user #  
+    #     return kwargs
         
+
 
 class ProfileView(DetailView):
     model = User
@@ -60,50 +65,3 @@ class ProfileView(DetailView):
     
     slug_field = "username"
     slug_url_kwarg = 'username'
-
-
-
-
-# class LoginView(FormView):
-#     form_class = UserCreationForm
-#     template_name = "login.html"
-#
-#
-#     def get_form_class(self):
-#         form_type = self.request.POST.get("form_type")
-#         if form_type == 'register':
-#             return UserCreationForm
-#         return LoginUserForm
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         form_type = self.request.POST.get("form_type")
-#         if form_type == 'register':
-#             context[]
-#
-#     def form_valid(self, form):
-#         form_type = self.request.POST.get("form_type")
-#
-#         if form_type == "register" :
-#             email = form.cleaned_data['email']
-#             if not email:
-#                 form.add_error('email', "The email field is empty")
-#                 return self.form_invalid(form)
-#
-#             user = form.save()
-#             login(self.request, user)
-#             return self.form_valid(form)
-#
-#         if form_type == "login":
-#             username = form.cleaned_data.get("username")
-#             password = form.cleaned_data.get("password")
-#             user = authenticate(self.request, username=username, password=password)
-#
-#             if user:
-#                 login(self.request, user)
-#                 return self.form_valid(form)
-#
-#             form.add_error('username', "Invalid username or invalid password")
-#
-#         return super().form_invalid(form)
-

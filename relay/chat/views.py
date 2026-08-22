@@ -91,7 +91,6 @@ class GroupInfoView(DetailView):
 
 class GroupEditView(UpdateView):
     model = Group
-    # fields = ['name']
     success_url = "/"
     template_name = "group-edit.html"
     form_class = GroupForm

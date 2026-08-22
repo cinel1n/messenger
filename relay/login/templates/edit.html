@@ -12,11 +12,24 @@
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="pills-register" role="tabpanel" aria-labelledby="tab-register">
-                <form method="post">
+                <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     {{ form.non_field_errors }}
-
+                    <img
+                        src="{{ object.avatar.url }}"
+                        alt="Avatar"
+                        class="profile-avatar-preview"
+                    >
+                    
                     {% for field in form %}
+                    
+                    {% if field.errors %}
+                        <div class="form-error">
+                            {% for error in field.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
 
                     <div data-mdb-input-init class="form-outline mb-4">
                         {{field}}
