@@ -10,7 +10,14 @@
 
 <div class="profile-card">
     <ul class="list-group profile-list">
-
+        {% if object.avatar%}
+        <img
+        
+            src="{{ object.avatar.url }}"
+            alt="Avatar"
+            class="profile-avatar-preview"
+        >
+        {% endif %}
         <li class="list-group-item profile-item">
             <span class="field-value">{{ object.username }}</span>
             <span class="type-field">Username</span>

@@ -50,11 +50,6 @@ class ProfileEditView(UpdateView):
 
     def get_object(self, queryset=None): 
         return self.request.user
-
-    # def get_form_kwargs(self):
-    #     kwargs = super().get_form_kwargs()
-    #     kwargs['instance'] = self.request.user #  
-    #     return kwargs
         
 
 

@@ -55,3 +55,16 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+.profile-avatar-preview {
+    display: block;
+    width: 120px;
+    height: 120px;
+
+    margin: 0 auto 20px;
+
+    object-fit: cover;
+
+    border-radius: 50%;
+
+    border: 2px solid #dee2e6;
+}

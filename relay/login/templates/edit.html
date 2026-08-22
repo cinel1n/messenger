@@ -15,11 +15,14 @@
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     {{ form.non_field_errors }}
+                    {% if object.avatar%}
                     <img
+                    
                         src="{{ object.avatar.url }}"
                         alt="Avatar"
                         class="profile-avatar-preview"
                     >
+                    {% endif %}
                     
                     {% for field in form %}
                     
