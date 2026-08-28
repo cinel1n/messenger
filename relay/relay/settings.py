@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -88,15 +91,34 @@ ASGI_APPLICATION = 'relay.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': "mess_db",
-        'USER':"postgres",
-        "HOST":'localhost',
-        "PORT":5432,
-        "PASSWORD":"p0st+",
+        'NAME': os.getenv("NAME_DATABASE"),
+        'USER':os.getenv("USER_DATABASE"),
+        "HOST":os.getenv("HOST_DATABASE"),
+        "PORT":int(os.getenv("PORT_DATABASE")),
+        "PASSWORD":os.getenv("PASSWORD_DATABASE"),
     }
 }
 
 AUTH_USER_MODEL = "login.User"
+
+# Email 
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+# CELERY-REDIS
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = os.getenv("REDIS_PORT")
+BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+
+
+
+SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"

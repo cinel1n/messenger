@@ -1,6 +1,6 @@
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, UpdateView
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView
@@ -14,6 +14,12 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
+def verify(request, uuid):
+    user = get_object_or_404(User, verification_uuid=uuid)
+    user.is_email = True
+    user.save()
+    return render(request, "activate.html")
 
 class LoginUserView(LoginView):
     form_class = LoginUserForm

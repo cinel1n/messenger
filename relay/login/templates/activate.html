@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block title %}confirmed your email{% endblock%}
+{% block content %}
+<div style="margin:20vh">
+    <h1>you have confirmed your email</h1>
+    <a href="{% url 'home' %}" class="edit-profile-btn" style="width:10vw">Home</a>
+</div>
+{% endblock %}

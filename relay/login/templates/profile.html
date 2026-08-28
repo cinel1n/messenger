@@ -42,7 +42,11 @@
     <a href="{% url 'edit' %}" class="edit-profile-btn">
         Change data
     </a>
+    <a class="edit-profile-btn delete-user-btn" aria-current="page" href="{% url 'logout' %}" >Exit</a>
     {% else %}
+
+        
+
 
     <form method="POST" action="{% url 'user' user.username %}">
         {% csrf_token %}
