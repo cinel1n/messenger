@@ -45,8 +45,6 @@ class HomeView(LoginRequiredMixin, ListView):
             context['messages_event'] = sorted_message_event_list
             context['group_member'] = group.get_name(self.request.user)
 
-        context["user"] = self.request.user
-
         group_list = []
 
         for group in self.object_list:
@@ -169,6 +167,7 @@ def delete_group_member(request, id):
     
     return HttpResponse("You cannot delete this user", status=403)
     
+
 @require_http_methods(["POST"])
 def admin_group_member(request, id):
     user = request.user

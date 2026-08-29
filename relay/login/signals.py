@@ -10,5 +10,5 @@ User = get_user_model()
 
 @receiver(post_save, sender=User)
 def user_verified(sender, instance, created, *args, **kwargs):
-    if created or instance.email:
+    if created and instance.email:
         send_verification_email.delay(instance.id)

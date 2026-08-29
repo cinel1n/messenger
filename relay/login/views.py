@@ -11,7 +11,9 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
-
+from django.http import HttpResponse
+from .tasks import *
+from django.views.decorators.http import require_http_methods
 User = get_user_model()
 
 
@@ -20,6 +22,7 @@ def verify(request, uuid):
     user.is_email = True
     user.save()
     return render(request, "activate.html")
+
 
 class LoginUserView(LoginView):
     form_class = LoginUserForm
@@ -49,7 +52,6 @@ class ProfileEditView(UpdateView):
     form_class = ProfileForm
     model = User
     template_name = "edit.html"
-    success_url = "/"
 
     slug_field = "username"
     slug_url_kwarg = "username"
@@ -57,6 +59,10 @@ class ProfileEditView(UpdateView):
     def get_object(self, queryset=None): 
         return self.request.user
         
+    def get_success_url(self):
+        return reverse("profile", 
+        kwargs={"username":self.request.user.username}
+        )
 
 class ProfileView(DetailView):
     model = User
@@ -65,3 +71,20 @@ class ProfileView(DetailView):
     
     slug_field = "username"
     slug_url_kwarg = 'username'
+
+
+@require_http_methods("POST")
+def confirm_email(request):
+    user = request.user
+    if user.email and not user.is_email:
+        send_verification_email.delay(user.id)
+        return HttpResponse(
+        '<div id="notification" class="notification success">'
+        'The message has been sent. check your email'
+        '</div>'
+        )
+    return HttpResponse(
+        '<div id="notification" class="notification error">'
+        'You dont have email or you confirmed email'
+        '</div>'
+        )
