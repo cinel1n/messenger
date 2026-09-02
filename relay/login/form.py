@@ -1,7 +1,8 @@
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordResetForm
 from django import forms
 from django.contrib.auth import get_user_model
-
+from .tasks import send_mail_reset_password
+from django.template import loader
 User = get_user_model()
 
 
@@ -42,3 +43,31 @@ class CreateUserForm(UserCreationForm):
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'avatar', 'data_entry')
+
+
+class RedefinedPasswordResetForm(PasswordResetForm):
+    def send_mail(
+            self,
+            subject_template_name,
+            email_template_name,
+            context,
+            from_email,
+            to_email,
+            html_email_template_name=None,
+        ):
+        subject = loader.render_to_string(subject_template_name, context)
+        # Email subject *must not* contain newlines
+        subject = "".join(subject.splitlines())
+        body = loader.render_to_string(email_template_name, context)
+
+        html_email = None
+        if html_email_template_name is not None:
+            html_email = loader.render_to_string(html_email_template_name, context)
+        
+        send_mail_reset_password.delay(
+            subject,
+            body,
+            from_email,
+            to_email,
+            html_email,
+        )
