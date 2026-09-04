@@ -4,6 +4,9 @@ from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import User
 import uuid
+from .validators import validate_avater_size
+from PIL import Image
+
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -33,7 +36,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(blank=True, default="")
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30, blank=True, default="")
-    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
+    avatar = models.ImageField(upload_to="avatars/",
+        blank=True,
+        null=True, 
+        validators=[validate_avater_size]
+        )
 
     is_email = models.BooleanField(default=False)
     verification_uuid = models.UUIDField(default=uuid.uuid4)
@@ -48,3 +55,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.first_name}"
+
+    def save(self, *args, **kwargs):
+        if self.avatar:
+            image = Image.open(self.avatar)
+
+            max_size = (640, 640)
+            image.thumbnail(max_size)
+            image.save(
+                self.avatar.path, 
+                quality=85, 
+                optimize=True
+            )
+        super().save(*args, **kwargs)
