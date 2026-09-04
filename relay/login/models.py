@@ -5,7 +5,6 @@ from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import User
 import uuid
 from .validators import validate_avater_size
-from PIL import Image
 
 
 class UserManager(BaseUserManager):
@@ -56,15 +55,3 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f"{self.first_name}"
 
-    def save(self, *args, **kwargs):
-        if self.avatar:
-            image = Image.open(self.avatar)
-
-            max_size = (640, 640)
-            image.thumbnail(max_size)
-            image.save(
-                self.avatar.path, 
-                quality=85, 
-                optimize=True
-            )
-        super().save(*args, **kwargs)

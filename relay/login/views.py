@@ -13,6 +13,10 @@ from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from .tasks import *
+from io import BytesIO
+from PIL import Image
+from django.core.files.base import ContentFile
+from django.db import models
 from django.views.decorators.http import require_http_methods
 User = get_user_model()
 
@@ -32,12 +36,41 @@ class LoginUserView(LoginView):
         return reverse_lazy('home')
 
 
+def compress_image(image):
+    img = Image.open(image)
+
+    img.thumbnail((640, 640))
+
+    buffer = BytesIO()
+
+    if img.mode in ("RGBA", "P"):
+        img = img.convert("RGB")
+
+    img.save(
+        buffer,
+        format="JPEG",
+        quality=85,
+        optimize=True,
+    )
+
+    return ContentFile(
+        buffer.getvalue(),
+        name="avatar.jpg",
+    )
+
+
 class RegisterUserView(FormView):
     form_class = CreateUserForm
     template_name = "register.html"
     success_url = reverse_lazy("log")
 
     def form_valid(self, form):
+        
+        avatar = form.cleaned_data["avatar"]
+        if avatar:
+            image = compress_image(avatar)
+            form.instance.avatar = image
+
         user = form.save()
         login(self.request, user)
         return super().form_valid(form)
@@ -61,7 +94,7 @@ class ProfileEditView(UpdateView):
         
     def get_success_url(self):
         return reverse("profile", 
-        kwargs={"username":self.request.user.username}
+            kwargs={"username":self.request.user.username}
         )
 
 class ProfileView(DetailView):
