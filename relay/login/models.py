@@ -4,7 +4,7 @@ from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import User
 import uuid
-from .validators import validate_avater_size
+from .validators import validate_avatar_size
 
 
 class UserManager(BaseUserManager):
@@ -38,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     avatar = models.ImageField(upload_to="avatars/",
         blank=True,
         null=True, 
-        validators=[validate_avater_size]
+        validators=[validate_avatar_size]
         )
 
     is_email = models.BooleanField(default=False)

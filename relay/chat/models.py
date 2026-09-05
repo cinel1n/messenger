@@ -2,7 +2,7 @@ from datetime import datetime
 from django.db import models
 from django.contrib.auth import get_user_model
 from uuid import uuid4
-
+from login.validators import validate_avatar_size
 from django.urls import reverse
 
 User = get_user_model()
@@ -15,7 +15,8 @@ class Group(models.Model):
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
     name = models.CharField(max_length=30, blank=True)
     members = models.ManyToManyField(User, through='GroupMemberModel')
-    avatar = models.ImageField(upload_to="avatars/", blank=True, default="")
+    avatar = models.ImageField(upload_to="avatars/", blank=True, default="", 
+        validators=[validate_avatar_size])
     type = models.CharField(max_length=10, choices=GroupType.choices, default=GroupType.PRIVATE)
 
 

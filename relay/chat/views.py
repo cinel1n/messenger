@@ -13,6 +13,8 @@ from .form import GroupForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Count
+from login.validators import compress_image
+
 
 class HomeView(LoginRequiredMixin, ListView):
     model = Group
@@ -207,6 +209,7 @@ class DeleteChatView(DeleteView):
 
         return HttpResponseForbidden()
 
+
 def start_chat_view(request, username):
     user = get_object_or_404(User, username=username)
     group = Group.objects.filter(members=user).filter(members=request.user).filter(type=Group.GroupType.PRIVATE).first()
@@ -231,8 +234,13 @@ class CreateGroupView(FormView):
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
-        group = form.save(commit=False)
+        group = form.save(commit=False) # creates a model object but does not save it
         group.type = group.GroupType.PUBLIC
+
+        if group.avatar:
+            avatar = compress_image(group.avatar)
+            group.avatar = avatar
+            
         group.save()
 
         GroupMemberModel.objects.create(

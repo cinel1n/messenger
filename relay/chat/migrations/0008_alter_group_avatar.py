@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('login', '0007_rename_verigication_uuid_user_verification_uuid'),
+        ('chat', '0007_alter_group_avatar'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
+            model_name='group',
             name='avatar',
-            field=models.ImageField(blank=True, null=True, upload_to='avatars/', validators=[login.validators.validate_avatar_size]),
+            field=models.ImageField(blank=True, default='', upload_to='avatars/', validators=[login.validators.validate_avatar_size]),
         ),
     ]
