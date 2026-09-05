@@ -13,6 +13,9 @@ from .form import GroupForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Count
+from rest_framework import viewsets
+from rest_framework import permissions
+from .serializers import UserSerializer, GroupSerializer
 from login.validators import compress_image
 
 
@@ -271,3 +274,14 @@ class CreateGroupView(FormView):
 
         return kwargs
 
+
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class GroupMemberViewSet(viewsets.ModelViewSet):
+    queryset = GroupMemberModel.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.IsAuthenticated]

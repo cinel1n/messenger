@@ -16,7 +16,8 @@ from .tasks import *
 from django.db import models
 from django.views.decorators.http import require_http_methods
 from .validators import compress_image
-
+from rest_framework.generics import ListAPIView
+from .serializers import *
 
 User = get_user_model()
 
@@ -99,3 +100,15 @@ def confirm_email(request):
         'You dont have email or you confirmed email'
         '</div>'
         )
+
+from rest_framework.pagination import PageNumberPagination
+class PeginatorAPIView(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class UserAPIView(ListAPIView):
+    serializer_class = UserSerializer
+    pagination_class = PeginatorAPIView
+    def get_queryset(self):
+        return User.objects.all()

@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
-from .views import LoginUserView, RegisterUserView, logout_, ProfileView, ProfileEditView, verify, confirm_email
+from .views import LoginUserView, RegisterUserView, logout_, ProfileView, ProfileEditView, verify, confirm_email, \
+    UserAPIView
 from django.contrib.auth import views as auth_views
 from .form import RedefinedPasswordResetForm
 
@@ -13,6 +14,8 @@ urlpatterns = [
     path("verify/<uuid:uuid>", verify, name="verify"),
     path("confirm-email", confirm_email, name="confirm-email"),
     path("profile/<str:username>", ProfileView.as_view(), name="profile"),
+
+    path("api/users/list", UserAPIView.as_view()), 
     path(
         "password-reset/",
         auth_views.PasswordResetView.as_view(
