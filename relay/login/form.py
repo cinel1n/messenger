@@ -28,7 +28,7 @@ class CreateUserForm(UserCreationForm):
     username = forms.CharField(label="Username",min_length=5 ,max_length=50, widget=forms.TextInput(attrs={"class":"form-control", 'id':"loginName"}))
     first_name = forms.CharField(label="First Name", max_length=50, widget=forms.TextInput(attrs={"class":"form-control", 'id':"RegisterName"}))
     last_name = forms.CharField(label="Last Name",required=False ,max_length=50, widget=forms.TextInput(attrs={"class":"form-control", 'id':"RegisterLastName"}))
-    email = forms.EmailField(label="Email", max_length=50, widget=forms.TextInput(attrs={"class":"form-control", 'id':"RegisterEmail"}))
+    email = forms.EmailField(label="Email", max_length=50, widget=forms.TextInput(attrs={"class":"form-control", 'id':"RegisterEmail"}), required=False)
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput(attrs={
             'class': 'form-control',
             'id': "registerPassword",
@@ -55,6 +55,8 @@ class RedefinedPasswordResetForm(PasswordResetForm):
             to_email,
             html_email_template_name=None,
         ):
+
+        #https://docs.djangoproject.com/en/5.0/_modules/django/contrib/auth/forms/#PasswordResetForm.send_mail
         subject = loader.render_to_string(subject_template_name, context)
         # Email subject *must not* contain newlines
         subject = "".join(subject.splitlines())

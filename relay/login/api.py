@@ -20,6 +20,8 @@ class UserAPIView(APIView):
     pagination_class = PeginatorAPIView
     permission_classes = [UserPermission, ]
 
+    #https://www.django-rest-framework.org/tutorial/3-class-based-views/#rewriting-our-api-using-class-based-views
+
     def get(self, request, pk=None):
         if pk is not None:
             user = get_object_or_404(User, pk=pk)
@@ -74,13 +76,3 @@ class UserAPIView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-
-"""    {
-        "password": "wouehrf2893y2",
-        "username": "eru12fhe",
-        "email": "k.d.a.gee322kinbox@gmail.com",
-        "first_name": "wef",
-        "last_name": "23",
-
-    }
-    """

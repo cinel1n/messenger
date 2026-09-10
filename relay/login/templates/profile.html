@@ -36,6 +36,10 @@
             <span class="type-field">Last Name</span>
         </li>
         {% endif %}
+        <li class="list-group-item profile-item">
+            <span class="field-value">{{ object.is_email }}</span>
+            <span class="type-field">Confirm email</span>
+        </li>
 
     </ul>
     {% if request.user == object %}

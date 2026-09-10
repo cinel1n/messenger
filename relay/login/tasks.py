@@ -41,8 +41,6 @@ def send_mail_reset_password(
         html_email=None,
         ):
 
-
-    #https://docs.djangoproject.com/en/5.0/_modules/django/contrib/auth/forms/#PasswordResetForm.send_mail
     email_message = EmailMultiAlternatives(subject, body, from_email, [to_email])
     if html_email is not None:
         email_message.attach_alternative(html_email, "text/html")

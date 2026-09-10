@@ -35,8 +35,6 @@ class LoginUserView(LoginView):
         return reverse_lazy('home')
 
 
-
-
 class RegisterUserView(FormView):
     form_class = CreateUserForm
     template_name = "register.html"
@@ -66,9 +64,25 @@ class ProfileEditView(UpdateView):
     slug_field = "username"
     slug_url_kwarg = "username"
 
-    def get_object(self, queryset=None): 
+    def get_object(self, queryset=None):  # user from request
         return self.request.user
-        
+
+    def form_valid(self, form):
+        user = self.request.user
+        new_email = form.cleaned_data["email"] 
+        # form.unstanse и self.request.user refer to the same object, form.initial stores the old value of the form 
+        old_email = form.initial.get("email")
+
+        if old_email != new_email: # if new email
+            users_email = User.objects.filter(email__iexact=new_email, is_email=True)
+            if users_email.exists(): 
+                form.add_error("email", "This email is already in use.")
+                return super().form_invalid(form)
+
+            form.instance.is_email = False
+
+        return super().form_valid(form)
+
     def get_success_url(self):
         return reverse("profile", 
             kwargs={"username":self.request.user.username}
@@ -86,7 +100,10 @@ class ProfileView(DetailView):
 @require_http_methods("POST")
 def confirm_email(request):
     user = request.user
-    if user.email and not user.is_email:
+
+    users_email = User.objects.filter(email=user.email, is_email=True)  # There are no users with this verified email.
+
+    if user.email and not user.is_email and users_email.exists():
         send_verification_email.delay(user.id)
         return HttpResponse(
         '<div id="notification" class="notification success">'
