@@ -55,3 +55,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f"{self.first_name}"
 
+    class Meta:
+        constraints = [  #list of database constraint objects
+            models.UniqueConstraint(
+                fields=['email',],
+                condition=models.Q(is_email=True),
+                name="unique_confirmed_email",
+            )
+        ]
