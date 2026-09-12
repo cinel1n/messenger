@@ -1,10 +1,11 @@
 import json
-
+from .utils import check_message_rate_limit
 from channels.db import database_sync_to_async
 from channels.generic.websocket import WebsocketConsumer, AsyncWebsocketConsumer
 from login.models import User
-
+from django.utils.decorators import method_decorator
 from .models import Event, Message, Group
+from django_ratelimit.decorators import ratelimit
 
 
 class GroupConsumer(AsyncWebsocketConsumer):
@@ -27,7 +28,14 @@ class GroupConsumer(AsyncWebsocketConsumer):
         text_data = json.loads(text_data)
         type = text_data.get("type", None)
         message_content = text_data.get("message", None)
-        author = text_data.get("author", None)
+        author = self.user
+        
+        if not await check_message_rate_limit(self.user.id):
+            await self.send_json({
+                "type": "error",
+                "message":"Too many messages. Try again later"
+            })
+            return 
 
         if type == "text_message":
             user = await database_sync_to_async(User.objects.get)(username=author)

@@ -4,6 +4,7 @@ from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import User
 import uuid
+from django_ratelimit.decorators import ratelimit
 from .validators import validate_avatar_size
 
 

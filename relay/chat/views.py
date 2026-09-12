@@ -137,7 +137,12 @@ class GroupEditView(UpdateView):
         group = self.get_object()
 
         group.name = form.cleaned_data["name"]
-        group.avatar = form.cleaned_data["avatar"]
+        new_ava = form.cleaned_data['avatar']
+        
+        if group.avatar != new_ava:
+            avatar = compress_image(new_ava)
+            group.avatar = new_ava
+
         group.save()
         for member in form.cleaned_data["members"]:
             GroupMemberModel.objects.create(group=group, user=member)

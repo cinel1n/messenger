@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import LoginUserView, RegisterUserView, logout_, ProfileView, ProfileEditView, verify, confirm_email
+from .views import LoginUserView, RegisterUserView, MyPasswordResetView, logout_, ProfileView, ProfileEditView, verify, confirm_email
 from .api import UserAPIView
 from django.contrib.auth import views as auth_views
 from .form import RedefinedPasswordResetForm
@@ -21,8 +21,7 @@ urlpatterns = [
 
     path(
         "password-reset/",
-        auth_views.PasswordResetView.as_view(
-                form_class=RedefinedPasswordResetForm,
+        MyPasswordResetView.as_view(
                 template_name="password_reset.html",
                 email_template_name="password_reset_email.html",
             ),

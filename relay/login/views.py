@@ -16,8 +16,25 @@ from .tasks import *
 from django.db import models
 from django.views.decorators.http import require_http_methods
 from .validators import compress_image
+from django.utils.decorators import method_decorator
+from django.contrib.auth.views import PasswordResetView
+from .form import RedefinedPasswordResetForm
+from django_ratelimit.decorators import ratelimit
 
 User = get_user_model()
+
+
+@method_decorator(
+    ratelimit(
+        key="ip", 
+        rate="5/h",
+        method="POST", 
+        block=True
+    ), 
+    name="post"
+)
+class MyPasswordResetView(PasswordResetView):
+    form_class = RedefinedPasswordResetForm
 
 
 def verify(request, uuid):
@@ -27,6 +44,14 @@ def verify(request, uuid):
     return render(request, "activate.html")
 
 
+@method_decorator(
+    ratelimit(key="post:username", rate="5/m",block="POST", ), 
+    name="post"
+)
+@method_decorator(
+    ratelimit(key="ip", rate="5/m",block="POST", ), 
+    name="post"
+)
 class LoginUserView(LoginView):
     form_class = LoginUserForm
     template_name = 'login.html'
@@ -96,8 +121,8 @@ class ProfileView(DetailView):
     slug_field = "username"
     slug_url_kwarg = 'username'
 
-
 @require_http_methods("POST")
+@ratelimit(key="user", rate="5/h", block=True)
 def confirm_email(request):
     user = request.user
 
