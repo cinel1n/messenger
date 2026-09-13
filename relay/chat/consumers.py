@@ -16,6 +16,15 @@ class GroupConsumer(AsyncWebsocketConsumer):
             self.group_uuid, self.channel_name) # channel_name - адрес websocket соединения
 
         self.user = self.scope["user"]
+
+        is_member = await database_sync_to_async(
+            lambda: self.group.members.filter(id=self.user.id).exists()
+        )()
+
+        if not is_member:
+            await self.close()
+            return 
+
         await self.accept() # установление соединения
         
 
@@ -29,18 +38,18 @@ class GroupConsumer(AsyncWebsocketConsumer):
         type = text_data.get("type", None)
         message_content = text_data.get("message", None)
         author = self.user
-        
-        if not await check_message_rate_limit(self.user.id):
-            await self.send_json({
+
+        if not await check_message_rate_limit(self.user.id):  # check message
+            await self.send(text_data=json.dumps({
                 "type": "error",
                 "message":"Too many messages. Try again later"
-            })
+            }))
             return 
 
         if type == "text_message":
-            user = await database_sync_to_async(User.objects.get)(username=author)
+            
             await database_sync_to_async(Message.objects.create)(
-                author=user,
+                author=author,
                 content=message_content,
                 group=self.group
             )
@@ -50,7 +59,7 @@ class GroupConsumer(AsyncWebsocketConsumer):
             {
                 "type": "text_message",
                 "message": message_content,
-                "author": author
+                "author": author.username
             }
         )
 
