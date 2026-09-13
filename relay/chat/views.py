@@ -14,6 +14,8 @@ from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Count
 from rest_framework import viewsets
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from rest_framework import permissions
 from .serializers import UserSerializer, GroupSerializer
 from login.validators import compress_image
@@ -173,6 +175,16 @@ def delete_group_member(request, id):
     if user_gm.is_creator or (user_gm.is_admin and not member.is_admin):
         member.delete() 
         Event.objects.create(type="Left", user=member.user, group=group)
+
+        channel_layer = get_channel_layer()
+        async_tosync(channel_layer.group_send)(
+            f"user_{user.id}", 
+            {
+                "type":"force_disconnect", 
+                "group_uuid":str(group_uuid),
+                "message": "you've been deleted from the group "
+            }
+        )
         return HttpResponse("")
     
     return HttpResponse("You cannot delete this user", status=403)

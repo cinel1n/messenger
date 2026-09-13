@@ -8,6 +8,9 @@ from .models import Event, Message, Group
 from django_ratelimit.decorators import ratelimit
 
 
+
+
+
 class GroupConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.group_uuid = str(self.scope["url_route"]["kwargs"]["uuid"])
@@ -18,12 +21,20 @@ class GroupConsumer(AsyncWebsocketConsumer):
         self.user = self.scope["user"]
 
         is_member = await database_sync_to_async(
-            lambda: self.group.members.filter(id=self.user.id).exists()
+            lambda: Group.objects.filter(
+                uuid=self.group_uuid,
+                members=self.user,
+            ).first()
         )()
 
         if not is_member:
             await self.close()
-            return 
+            return
+
+        # персональная группа для точечных команд конкретному пользователю
+        self.user_channel_group = f"user_{self.user.pk}"
+        await self.channel_layer.group_add(self.user_channel_group, self.channel_name)
+
 
         await self.accept() # установление соединения
         
@@ -47,7 +58,6 @@ class GroupConsumer(AsyncWebsocketConsumer):
             return 
 
         if type == "text_message":
-            
             await database_sync_to_async(Message.objects.create)(
                 author=author,
                 content=message_content,
@@ -93,3 +103,8 @@ class GroupConsumer(AsyncWebsocketConsumer):
             self.group_uuid,
             self.channel_name
         )
+        if hasattr(self, "user_channel_group"): # проверка на атрибут
+            await self.channel_layer.group_discard(self.user_channel_group, self.channel_name)
+
+    async def force_disconnect(self, event):
+        await self.close()
