@@ -19,6 +19,7 @@ from asgiref.sync import async_to_sync
 from rest_framework import permissions
 from .serializers import UserSerializer, GroupSerializer
 from login.validators import compress_image
+from django.db import transaction
 
 
 class HomeView(LoginRequiredMixin, ListView):
@@ -101,6 +102,7 @@ class GroupEditView(UpdateView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
 
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         group = self.object
@@ -135,15 +137,15 @@ class GroupEditView(UpdateView):
         kwargs['edit'] = True
         return kwargs
     
+    @transaction.atomic # атомарная запись в бд
     def form_valid(self, form):
         group = self.get_object()
 
         group.name = form.cleaned_data["name"]
         new_ava = form.cleaned_data['avatar']
         
-        if group.avatar != new_ava:
-            avatar = compress_image(new_ava)
-            group.avatar = new_ava
+        if new_ava:
+            group.avatar = compress_image(new_ava)
 
         group.save()
         for member in form.cleaned_data["members"]:
@@ -161,7 +163,7 @@ def accounts_search_view(request):
         return redirect("profile", username=username)
 
     messages.error(request,"user not found")
-    return redirect(request.META.get("HTTP_REFERER", "home"))
+    return redirect(request.META.get("HTTP_REFERER", "home")) # redirect на ранее посещенную страницу, инача на главную
 
 
 @require_http_methods(['DELETE'])

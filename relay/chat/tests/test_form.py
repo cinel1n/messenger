@@ -1,8 +1,10 @@
 from django.test import TestCase
 from chat.form import GroupForm
-from chat.models import User, Group
+from chat.models import Group
 from django.urls import reverse
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class GroupFormTest(TestCase):
     def setUp(self):

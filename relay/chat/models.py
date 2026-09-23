@@ -59,12 +59,18 @@ class GroupMemberModel(models.Model):
 
     class Meta:
         unique_together = ("group", "user")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["group", "user"], 
+                name="unique_group_member"
+            )
+        ]
 
 
 class Message(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
-    content = models.TextField()
+    content = models.TextField(max_length=4096)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
     def __str__(self):

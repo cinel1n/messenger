@@ -10,6 +10,7 @@ from .validators import validate_avatar_size
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
+        # для сохранения записей через rest API. ModelSerializer не шифровал пароль
         if not username:
             raise ValueError("Username is required")
         
@@ -17,7 +18,7 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self.db)
 
-        return User
+        return user
 
     def create_superuser(self, username, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)

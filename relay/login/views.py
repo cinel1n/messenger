@@ -113,6 +113,7 @@ class ProfileEditView(UpdateView):
             kwargs={"username":self.request.user.username}
         )
 
+
 class ProfileView(DetailView):
     model = User
     template_name = "profile.html"
@@ -120,6 +121,7 @@ class ProfileView(DetailView):
     
     slug_field = "username"
     slug_url_kwarg = 'username'
+
 
 @require_http_methods("POST")
 @ratelimit(key="user", rate="5/h", block=True)

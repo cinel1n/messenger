@@ -14,10 +14,7 @@ from django_ratelimit.decorators import ratelimit
 class GroupConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.group_uuid = str(self.scope["url_route"]["kwargs"]["uuid"])
-        self.group = await database_sync_to_async(Group.objects.get)(uuid=self.group_uuid)
-        await self.channel_layer.group_add( # добавление в слой
-            self.group_uuid, self.channel_name) # channel_name - адрес websocket соединения
-
+        
         self.user = self.scope["user"]
 
         is_member = await database_sync_to_async(
@@ -31,24 +28,59 @@ class GroupConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
+        self.group = await database_sync_to_async(Group.objects.get)(uuid=self.group_uuid)
+
+        await self.channel_layer.group_add( # добавление в слой
+            self.group_uuid, self.channel_name) # channel_name - адрес websocket соединения
+
         # персональная группа для точечных команд конкретному пользователю
         self.user_channel_group = f"user_{self.user.pk}"
         await self.channel_layer.group_add(self.user_channel_group, self.channel_name)
 
-
         await self.accept() # установление соединения
+    
+
+    async def valid_text_data(self,type=None, message_content=None):
         
+        if type != "text_message":
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "message":"Empty message or incorect type"
+            }))
+            return False
+        
+        if message_content is None or len(message_content) > 4096 or  message_content.strip() == "":
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "message":"message too long or empry"
+            }))
+            return False
+
+        return True
 
     async def receive(self, text_data=None, bytes_data=None):
         """
         После отправки сообщения пользователем на сервер
         Отправляет высокоуровневое событие в группу (channel_layer. self.send_json - низкоуровневое)
         """
+        
+        try:
+            text_data = json.loads(text_data)
 
-        text_data = json.loads(text_data)
+        except json.JSONDecodeError as decode:
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "message":f"json decode error: {decode.msg}"
+            }))
+            return 
+
+
         type = text_data.get("type", None)
         message_content = text_data.get("message", None)
         author = self.user
+
+        if not await self.valid_text_data(type, message_content):
+            return
 
         if not await check_message_rate_limit(self.user.id):  # check message
             await self.send(text_data=json.dumps({
@@ -57,12 +89,11 @@ class GroupConsumer(AsyncWebsocketConsumer):
             }))
             return 
 
-        if type == "text_message":
-            await database_sync_to_async(Message.objects.create)(
-                author=author,
-                content=message_content,
-                group=self.group
-            )
+        await database_sync_to_async(Message.objects.create)(
+            author=author,
+            content=message_content,
+            group=self.group
+        )
 
         await self.channel_layer.group_send( # попадает в Redis
             self.group_uuid,
@@ -72,6 +103,7 @@ class GroupConsumer(AsyncWebsocketConsumer):
                 "author": author.username
             }
         )
+
 
     async def text_message(self, event):
         """

@@ -10,6 +10,7 @@
 Home
 {% endblock%}
 {% block content %}
+
 <div class="chats row">
   <div class="users-messages col-3">
 
@@ -81,7 +82,7 @@ Home
           </div>
           {%endif%}
           {% endfor %}
-          
+          <div id="ws-error"></div>
         </div>
           <div class="mb-3 div-form-control-mes d-flex">
               <textarea class="form-control form-control-mes me-2"
@@ -130,7 +131,14 @@ Home
 
         chatWebSocket.onmessage = function (e) {
             const data = JSON.parse(e.data)
+
             console.log("Получено сообщение:", data)
+
+            if (data.type === "error") {
+                showError(data.message)
+                return
+            }
+
 
             if (data.type === "chat_message" || data.type === "text_message") {
                 // Добавляем сообщение в чат
@@ -153,6 +161,13 @@ Home
         }
     }
 
+    function showError(message) {
+        const errorDiv = document.querySelector('#ws-error')
+
+        if (!errorDiv) return
+
+        errorDiv.textContent = message
+    }
     // Функция добавления сообщения в чат
     function addMessageToChat(content, sender) {
         const chatMessages = document.querySelector('.chat-mess')
@@ -163,20 +178,28 @@ Home
         const messageDiv = document.createElement('div')
         messageDiv.className = isCurrentUser ? 'mes-1 mes-me' : 'mes-1'
 
-        const time = new Date().toLocaleTimeString([], {
+        const avatar = document.createElement('img')
+        avatar.className = 'avatar-user'
+        avatar.src = "{% static 'image/Bez_foto_7.jpg' %}"
+
+        const message = document.createElement('p')
+        message.className = 'text-start text-break'
+        message.textContent = content
+
+        const time = document.createElement('span')
+        time.textContent = new Date().toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit'
         })
 
-        messageDiv.innerHTML = `
-            <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
-            <p class="text-start text-break">${content}</p>
-            <span>${time}</span>
-        `
+        messageDiv.appendChild(avatar)
+        messageDiv.appendChild(message)
+        messageDiv.appendChild(time)
 
         chatMessages.appendChild(messageDiv)
         chatMessages.scrollTop = chatMessages.scrollHeight
     }
+
 
     // Функция обновления последнего сообщения в списке
     function updateLastMessage(chat_uuid, message, sender) {
@@ -228,7 +251,6 @@ Home
 
                         chatWebSocket.send(JSON.stringify({
                             'type': "text_message",
-                            'author': '{{ user.username }}',
                             'message': content
                         }))
 

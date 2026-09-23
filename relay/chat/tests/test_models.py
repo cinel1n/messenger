@@ -1,6 +1,9 @@
 from django.test import TestCase
-from chat.models import Group, Message, User, GroupMemberModel, Event
+from chat.models import Group, Message, GroupMemberModel, Event
 from django.urls import reverse
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class ChatModelTest(TestCase):

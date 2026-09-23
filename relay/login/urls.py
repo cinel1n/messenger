@@ -3,7 +3,6 @@ from . import views
 from .views import LoginUserView, RegisterUserView, MyPasswordResetView, logout_, ProfileView, ProfileEditView, verify, confirm_email
 from .api import UserAPIView
 from django.contrib.auth import views as auth_views
-from .form import RedefinedPasswordResetForm
 
 
 urlpatterns = [

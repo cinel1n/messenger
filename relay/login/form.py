@@ -56,7 +56,7 @@ class RedefinedPasswordResetForm(PasswordResetForm):
             html_email_template_name=None,
         ):
 
-        #https://docs.djangoproject.com/en/5.0/_modules/django/contrib/auth/forms/#PasswordResetForm.send_mail
+        #https://docs.djangoproject.com/en/5.0/_modulesc/django/contrib/auth/forms/#PasswordResetForm.send_mail
         subject = loader.render_to_string(subject_template_name, context)
         # Email subject *must not* contain newlines
         subject = "".join(subject.splitlines())

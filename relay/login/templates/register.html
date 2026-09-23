@@ -17,7 +17,11 @@
             <div class="tab-pane fade show active" id="pills-register" role="tabpanel" aria-labelledby="tab-register">
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
-
+                    {% if form.errors %}
+                    {% for i in form.non_field_errors %}
+                    {{i}}
+                    {% endfor %}
+                    {% endif %}
                     {% for field in form %}
 
                     {% if field.name != "data_entry" %}
