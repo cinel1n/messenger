@@ -325,7 +325,6 @@ class GroupEditTest(TestCase):
         )
         self.group1.refresh_from_db()
 
-        print(Group.objects.get(uuid=self.group1.uuid).members)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.group1.name, "new_name")
         self.assertTrue(
@@ -342,3 +341,133 @@ class GroupEditTest(TestCase):
                 type="Join"
             ).exists()
         )
+
+class DeleteGroupMemberTest(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(username="test_user1", password="testuserpassword001")
+        self.user2 = User.objects.create_user(username="test_user2", password="testuserpassword001")
+        
+        self.group1 = Group.objects.create(name="test_group")
+        self.group1.members.add(self.user2, self.user1)
+
+        self.gm_user1 = GroupMemberModel.objects.get(user=self.user1, group=self.group1)
+        self.gm_user1.is_admin = True
+        self.gm_user1.is_creator = True
+        self.gm_user1.save()
+        self.gm_user2 = GroupMemberModel.objects.get(user=self.user2, group=self.group1)
+        
+        self.url = reverse("delete-group-member", args=[self.gm_user2.id])
+
+    def test_assert_http_methods(self):
+         # запрещенные методы
+        self.client.login(username="test_user1", password="testuserpassword001")
+       
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+        self.assertEqual(self.client.post(self.url).status_code, 405)
+
+        # только доступный метод
+        self.assertEqual(self.client.delete(self.url).status_code, 200)
+
+    def test_member_cannot_delete_creator(self):
+        # обычный пользователь хочет удалить создателя
+        url = reverse("delete-group-member", args=[self.gm_user1.id])
+        self.client.login(username="test_user2", password="testuserpassword001")
+
+        response = self.client.delete(url)
+
+        # нет прав для удаления
+        self.assertEqual(response.status_code, 403) 
+        # действительно ли не удален
+        self.assertTrue(
+            GroupMemberModel.objects.filter(
+                id=self.gm_user1.id
+            ).exists()
+        )
+
+    def test_admin_cannot_delete_creator(self):
+        # админ хочет удалить создателя
+        url = reverse("delete-group-member", args=[self.gm_user1.id])
+        self.client.login(username="test_user2", password="testuserpassword001")
+
+        # назначаем права админа для пользователя 2
+        self.gm_user2.is_admin = True
+        self.gm_user2.save()
+
+        response = self.client.delete(url)
+
+        # админ не может удалить создателя
+        self.assertEqual(response.status_code, 403) 
+        # действительно ли не удален
+        self.assertTrue(
+            GroupMemberModel.objects.filter(
+                id=self.gm_user1.id
+            ).exists()
+        )
+
+    def test_creator_cannot_delete_creator(self):
+        # создаитель хочет удалить создателя
+        url = reverse("delete-group-member", args=[self.gm_user1.id])
+        self.client.login(username="test_user2", password="testuserpassword001")
+        # назначаем права создателя для пользователя 2
+        self.gm_user2.is_creator = True
+        self.gm_user2.save()
+
+        response = self.client.delete(url)
+        
+        # создатель не может удалить создателя
+        self.assertEqual(response.status_code, 403) 
+        # действительно ли не удален
+        self.assertTrue(
+            GroupMemberModel.objects.filter(
+                id=self.gm_user1.id
+            ).exists()
+        )
+
+    def test_creator_can_delete_admin(self):
+        url = reverse("delete-group-member", args=[self.gm_user1.id])
+        self.client.login(username="test_user2", password="testuserpassword001")
+
+        # назначаем права создателя для пользователя 2
+        self.gm_user2.is_creator = True
+        self.gm_user2.save()
+        self.gm_user2.refresh_from_db()
+
+        # убираем права создателя для пользователя 1
+        self.gm_user1.is_creator = False
+        self.gm_user1.save()
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 200) 
+        # действительно ли удален
+        self.assertFalse(
+            GroupMemberModel.objects.filter(
+                id=self.gm_user1.id
+            ).exists()
+        )
+
+    def test_member_cannot_delete_member(self):
+        url = reverse("delete-group-member", args=[self.gm_user1.id])
+        self.client.login(username="test_user2", password="testuserpassword001")
+
+        # убираем права создателя для пользователя 1
+        self.gm_user1.is_creator = False
+        self.gm_user1.save()
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 403) 
+        # действительно ли не удален
+        self.assertTrue(
+            GroupMemberModel.objects.filter(
+                id=self.gm_user1.id
+            ).exists()
+        )
+
+    def test_not_member_group_404(self):
+        self.client.login(username="test_user2", password="testuserpassword001")
+        self.gm_user2 = GroupMemberModel.objects.get(user=self.user2, group=self.group1)
+        self.gm_user2.delete()
+
+        url = reverse("delete-group-member", args=[self.gm_user1.id])
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 404)

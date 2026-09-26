@@ -171,19 +171,22 @@ def delete_group_member(request, id):
     user = request.user  # who deletes
     member = get_object_or_404(GroupMemberModel, id=id) # the one who is being removed
     group = member.group
-
+    
     user_gm = get_object_or_404(GroupMemberModel, user=user, group=group) # who deletes
     
-    if user_gm.is_creator or (user_gm.is_admin and not member.is_admin):
+    if (user_gm.is_creator and not member.is_creator) or \
+        (user_gm.is_admin and not member.is_admin and \
+            not member.is_creator):
+
         member.delete() 
         Event.objects.create(type="Left", user=member.user, group=group)
 
         channel_layer = get_channel_layer()
-        async_tosync(channel_layer.group_send)(
+        async_to_sync(channel_layer.group_send)(
             f"user_{user.id}", 
             {
                 "type":"force_disconnect", 
-                "group_uuid":str(group_uuid),
+                "group_uuid":str(group.uuid),
                 "message": "you've been deleted from the group "
             }
         )
