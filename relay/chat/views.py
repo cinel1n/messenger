@@ -5,7 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, TemplateView, FormView, DeleteView, DetailView, UpdateView
-from .models import Group, User, GroupMemberModel, Event
+from .models import Group, User, GroupMemberModel, Event, Message
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -20,6 +20,9 @@ from rest_framework import permissions
 from .serializers import UserSerializer, GroupSerializer
 from login.validators import compress_image
 from django.db import transaction
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.utils.dateparse import parse_datetime
 
 
 class HomeView(LoginRequiredMixin, ListView):
@@ -32,26 +35,6 @@ class HomeView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        try:
-            group_uuid = self.kwargs['uuid']
-        except:
-            group_uuid = None
-
-        if group_uuid:
-            group = get_object_or_404(Group, uuid=group_uuid)
-            messages = group.message_set.all()
-            events = group.event_set.all()
-            message_and_event_list = [*messages, *events]
-            sorted_message_event_list = sorted(message_and_event_list, key=lambda x: x.timestamp)
-            member_group = get_object_or_404(GroupMemberModel, group=group, user=self.request.user)
-
-            context["is_delete"] = False
-            if group.type == group.GroupType.PRIVATE or member_group.is_creator:
-                context["is_delete"] = True
-
-            context['group'] = group
-            context['messages_event'] = sorted_message_event_list
-            context['group_member'] = group.get_name(self.request.user)
 
         group_list = []
 
@@ -73,6 +56,63 @@ class HomeView(LoginRequiredMixin, ListView):
             group_list.append(data)
 
         context['groups'] = group_list
+
+        return context
+
+
+class ChatView(HomeView):
+    model = Group
+    template_name = "home.html"
+    login_url = reverse_lazy('log')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        group_uuid = self.kwargs['uuid']
+
+        group = get_object_or_404(Group, uuid=group_uuid)
+
+        before = self.request.GET.get("before")
+
+        messages = Message.objects.filter(
+            group=group
+        )
+
+        events = Event.objects.filter(
+            group=group
+        )
+
+        if before:
+            before_dt = parse_datetime(before)
+
+            messages = messages.filter(
+                timestamp__lt=before_dt
+            )
+            events = events.filter(
+                timestamp__lt=before_dt
+            )
+
+        messages = messages.order_by("-timestamp", "-id")[:50]
+        events = events.order_by("-timestamp", "-id")[:50]
+
+        message_and_event_list = [*messages, *events]
+        sorted_message_event_list = sorted(message_and_event_list, key=lambda x: x.timestamp)[:10]
+        
+        if sorted_message_event_list:
+            context["next_cursor"] = sorted_message_event_list[-1].timestamp.isoformat()
+        else:
+            context["next_cursor"] = None
+
+        
+        member_group = get_object_or_404(GroupMemberModel, group=group, user=self.request.user)
+
+        # удаление чата 
+        context["is_delete"] = False
+        if group.type == group.GroupType.PRIVATE or member_group.is_creator:
+            context["is_delete"] = True
+
+        context['group'] = group
+        context['messages_event'] = sorted_message_event_list
+        context['group_member'] = group.get_name(self.request.user)
 
         return context
 
