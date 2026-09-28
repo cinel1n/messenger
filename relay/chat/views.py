@@ -206,6 +206,15 @@ def accounts_search_view(request):
     return redirect(request.META.get("HTTP_REFERER", "home")) # redirect на ранее посещенную страницу, инача на главную
 
 
+@require_http_methods("DELETE")
+def delete_message_view(request, pk):
+    message = get_object_or_404(Message, id=pk)
+    if message.author != request.user:
+        return HttpResponse("You cannot delete this message", 403)
+    
+    message.delete()
+    return HttpResponse("")
+
 @require_http_methods(['DELETE'])
 def delete_group_member(request, id):
     user = request.user  # who deletes
