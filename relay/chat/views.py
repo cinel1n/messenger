@@ -213,7 +213,7 @@ def delete_message_view(request, pk):
         return HttpResponse("You cannot delete this message", 403)
     
     message.delete()
-    return HttpResponse("")
+    return HttpResponse("Message was deleted")
 
 @require_http_methods(['DELETE'])
 def delete_group_member(request, id):
