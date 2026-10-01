@@ -13,6 +13,7 @@ urlpatterns = [
     path("verify/<uuid:uuid>", verify, name="verify"),
     path("confirm-email", confirm_email, name="confirm-email"),
     path("profile/<str:username>", ProfileView.as_view(), name="profile"),
+    
 
     # API
     path("api/users", UserAPIView.as_view(), name="api_user"), 

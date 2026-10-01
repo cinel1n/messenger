@@ -21,7 +21,7 @@ urlpatterns = [
     path("group/member/delete/<int:id>", delete_group_member, name="delete-group-member"),
     path("group/member/admin/<int:id>", admin_group_member, name="admin-group-member"),
     path("group/edit/<str:uuid>",  GroupEditView.as_view(), name="group-edit"),
-    path("api/", include(router.urls))
-
+    path("api/", include(router.urls)),
+    path("chat-history/<uuid:uuid>", old_message, name="chat-history"), 
     # path("group/add-member/<str:uuid>",  GroupEditView.as_view(), name="group-edit"),
 ]

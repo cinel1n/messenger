@@ -19,8 +19,10 @@ from asgiref.sync import async_to_sync
 from rest_framework import permissions
 from .serializers import UserSerializer, GroupSerializer
 from login.validators import compress_image
+from relay.settings import LIMIT_MESSAGE
 from django.db import transaction
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.db.models import Q
 from django.utils.dateparse import parse_datetime
 
@@ -60,6 +62,72 @@ class HomeView(LoginRequiredMixin, ListView):
         return context
 
 
+def old_message(request, uuid):
+    group = get_object_or_404(Group, uuid=uuid, members=request.user)
+
+    before = request.GET.get("before")
+
+    messages = Message.objects.filter(
+        group=group
+    )
+
+    events = Event.objects.filter(
+        group=group
+    )
+
+    max_message = LIMIT_MESSAGE
+    
+    if before:
+        before_dt = parse_datetime(before)
+
+        messages = messages.filter(
+            timestamp__lt=before_dt
+        )
+        events = events.filter(
+            timestamp__lt=before_dt
+        )
+    
+    messages = messages.order_by("-timestamp", "-id")
+    events = events.order_by("-timestamp", "-id")
+    
+    message_and_event_list = [*messages, *events]
+    len_item = len(message_and_event_list) 
+    with_item = len_item-max_message if len_item > max_message else 0
+
+    items = sorted(message_and_event_list, key=lambda x: x.timestamp)[with_item:]
+    print(items[2].type_content())
+    return JsonResponse({
+        "messages": [
+            {
+                "id": item.id,
+                "type": item.type_content(),
+                "timestamp": item.timestamp.isoformat(),
+
+                "content": (
+                    item.content
+                    if item.type_content() == "message"
+                    else item.description
+                ),
+
+                "author": (
+                    item.author.username
+                    if item.type_content() == "message"
+                    else None
+                ),
+            }
+            for item in items[::-1]
+        ], 
+        "next_cursor": (
+            items[0].timestamp.isoformat()
+            if items
+            else None
+        ),
+        
+    }
+    )
+
+
+
 class ChatView(HomeView):
     model = Group
     template_name = "home.html"
@@ -81,6 +149,8 @@ class ChatView(HomeView):
             group=group
         )
 
+        max_massage=10
+        
         if before:
             before_dt = parse_datetime(before)
 
@@ -90,15 +160,18 @@ class ChatView(HomeView):
             events = events.filter(
                 timestamp__lt=before_dt
             )
-
-        messages = messages.order_by("-timestamp", "-id")[:50]
-        events = events.order_by("-timestamp", "-id")[:50]
-
+        
+        messages = messages.order_by("-timestamp", "-id")
+        events = events.order_by("-timestamp", "-id")
+        
         message_and_event_list = [*messages, *events]
-        sorted_message_event_list = sorted(message_and_event_list, key=lambda x: x.timestamp)[:10]
+        len_item = len(message_and_event_list) 
+        with_item = len_item-max_massage if len_item > max_massage else 0
+
+        sorted_message_event_list = sorted(message_and_event_list, key=lambda x: x.timestamp)[with_item:]
         
         if sorted_message_event_list:
-            context["next_cursor"] = sorted_message_event_list[-1].timestamp.isoformat()
+            context["next_cursor"] = sorted_message_event_list[0].timestamp.isoformat()
         else:
             context["next_cursor"] = None
 
@@ -109,7 +182,7 @@ class ChatView(HomeView):
         context["is_delete"] = False
         if group.type == group.GroupType.PRIVATE or member_group.is_creator:
             context["is_delete"] = True
-
+        
         context['group'] = group
         context['messages_event'] = sorted_message_event_list
         context['group_member'] = group.get_name(self.request.user)

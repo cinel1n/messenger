@@ -111,6 +111,8 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = "login.User"
 
+LIMIT_MESSAGE = 10
+
 # Email 
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
