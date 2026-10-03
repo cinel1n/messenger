@@ -3,6 +3,7 @@
 
 {% block style %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}"/>
+
 {% endblock %}
 
 
@@ -52,21 +53,24 @@ Home
                     {{ group_member }}
                 </a>
                 {% endif %}
-
+                <div class="right-block">
+                <button
+                    id="load-more-messages"
+                    class="load-more-messages btn "
+                    type="button"
+                >
+                    load old messages
+                </button>
+                
                 {% if is_delete %}
                 <a href="{% url 'delete-chat' group.uuid %}" class="delete-chat-btn">
                     Delete chat
                 </a>
                 {% endif %}
+                </div>
             </div>
             {% if next_cursor %}
-        <button
-            id="load-more-messages"
-            class="load-more-messages"
-            type="button"
-        >
-            Загрузить старые сообщения
-        </button>
+
 
 
     <div class="chat-mess" data-next-cursor="{{ next_cursor|default:'' }}" style="margin-top:1vh"   hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
@@ -82,7 +86,7 @@ Home
         <div class="mes-1" >
         {% endif %}
 
-            <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
+            <img class="avatar-user" src="{{mess.author.avatar.url }}">
             <p class="text-start text-break " id="mess-content-{{mess.id}}">{{ mess.content }} </p>
             
             {% if mess.author == user %}
@@ -114,10 +118,10 @@ Home
               <textarea class="form-control form-control-mes me-2"
                   id="message-input"
                   rows="3"
-                  placeholder="Введите сообщение...">
+                  placeholder="Enter a message...">
 
               </textarea>
-            <button class="btn btn-primary" id="send-button" style="height:5vh;">Отправить</button>
+            <button class="btn btn-primary" id="send-button" style="height:5vh;">SEND</button>
         </div>
       </div>
       
@@ -130,7 +134,7 @@ Home
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-  {% if messages_event %}
+  {% if group_member %}
   <script>
     // Автоскролл к последнему сообщению при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
@@ -169,7 +173,8 @@ Home
 
             if (data.type === "chat_message" || data.type === "text_message") {
                 // Добавляем сообщение в чат
-                addMessageToChat(data.message, data.author)
+                console.log(data.avatar)
+                addMessageToChat(data.message, data.author, data.avatar)
 
                 // Обновляем последнее сообщение в списке
                 updateLastMessage(current_chat_uuid, data.message, data.author)
@@ -195,19 +200,23 @@ Home
 
         errorDiv.textContent = message
     }
-    // Функция добавления сообщения в чат
-    function addMessageToChat(content, sender) {
+    function addMessageToChat(content, sender, avatarUrl) {
         const chatMessages = document.querySelector('.chat-mess')
+
         if (!chatMessages) return
 
         const isCurrentUser = sender === '{{ user.username }}'
 
         const messageDiv = document.createElement('div')
-        messageDiv.className = isCurrentUser ? 'mes-1 mes-me' : 'mes-1'
+
+        messageDiv.className = isCurrentUser
+            ? 'mes-1 mes-me'
+            : 'mes-1'
 
         const avatar = document.createElement('img')
         avatar.className = 'avatar-user'
-        avatar.src = "{% static 'image/Bez_foto_7.jpg' %}"
+        console.log(avatarUrl)
+        avatar.src = avatarUrl
 
         const message = document.createElement('p')
         message.className = 'text-start text-break'
@@ -465,7 +474,7 @@ Home
             if (!nextCursor) {
 
                 button.textContent =
-                    "Все сообщения загружены";
+                    "All messages have been loaded.";
 
                 button.disabled = true;
             }
@@ -474,7 +483,7 @@ Home
         } catch (error) {
 
             console.error(
-                "Ошибка загрузки сообщений:",
+                "error load messages:",
                 error
             );
 

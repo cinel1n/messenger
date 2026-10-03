@@ -100,7 +100,8 @@ class GroupConsumer(AsyncWebsocketConsumer):
             {
                 "type": "text_message",
                 "message": message_content,
-                "author": author.username
+                "author": author.username, 
+                "avatar": author.avatar.url if author.avatar else ""
             }
         )
 
@@ -110,10 +111,11 @@ class GroupConsumer(AsyncWebsocketConsumer):
         после receive 
         """
         message = event.get("message")
-
+        avatar = event.get("avatar")
         returned_data = {
             "type": "text_message",
             "message": message,
+            "avatar": avatar
         }
         await self.send(json.dumps(returned_data))
 

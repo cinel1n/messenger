@@ -294,3 +294,21 @@
     outline: 2px solid #dc3545;
     outline-offset: 2px;
 }
+
+.load-more-messages{
+    margin-right:10px;
+    background-color: #9bff6c44;
+    color:#2c7909
+}
+
+.load-more-messages :hover{
+    margin-right:10px;
+    background-color: #2c7909;
+    color:white;
+}
+.user-messege .right-block{
+    display: flex;
+    align-items: center;
+}
+
+

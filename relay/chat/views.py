@@ -61,10 +61,11 @@ class HomeView(LoginRequiredMixin, ListView):
 
         return context
 
-
-def old_message(request, uuid):
+# генерация сообщений группы, количество которых ограничено 
+def chat_data(request, uuid):
     group = get_object_or_404(Group, uuid=uuid, members=request.user)
 
+    # дата самаго старшего сообщения
     before = request.GET.get("before")
 
     messages = Message.objects.filter(
@@ -79,23 +80,28 @@ def old_message(request, uuid):
     
     if before:
         before_dt = parse_datetime(before)
-
+        # все сообщения и события, что старше before
         messages = messages.filter(
             timestamp__lt=before_dt
         )
         events = events.filter(
             timestamp__lt=before_dt
         )
-    
-    messages = messages.order_by("-timestamp", "-id")
-    events = events.order_by("-timestamp", "-id")
+    # сортировка по дате и id 
+    messages = messages.order_by("-timestamp", "-id")[:max_message]
+    events = events.order_by("-timestamp", "-id")[:max_message]
     
     message_and_event_list = [*messages, *events]
+    # элементы расположены от старшего к младшему, вычесление индекса, с которого можно брать элементы
     len_item = len(message_and_event_list) 
     with_item = len_item-max_message if len_item > max_message else 0
 
-    items = sorted(message_and_event_list, key=lambda x: x.timestamp)[with_item:]
-    print(items[2].type_content())
+    items = sorted(message_and_event_list, key=lambda x: (x.timestamp, x.id))[with_item:]
+    return items
+
+ 
+def old_message(request, uuid):
+    items = chat_data(request=request, uuid=uuid)
     return JsonResponse({
         "messages": [
             {
@@ -136,42 +142,12 @@ class ChatView(HomeView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         group_uuid = self.kwargs['uuid']
+        group = get_object_or_404(Group, uuid=group_uuid, members=self.request.user)
 
-        group = get_object_or_404(Group, uuid=group_uuid)
-
-        before = self.request.GET.get("before")
-
-        messages = Message.objects.filter(
-            group=group
-        )
-
-        events = Event.objects.filter(
-            group=group
-        )
-
-        max_massage=10
+        items_chat = chat_data(self.request, group_uuid)
         
-        if before:
-            before_dt = parse_datetime(before)
-
-            messages = messages.filter(
-                timestamp__lt=before_dt
-            )
-            events = events.filter(
-                timestamp__lt=before_dt
-            )
-        
-        messages = messages.order_by("-timestamp", "-id")
-        events = events.order_by("-timestamp", "-id")
-        
-        message_and_event_list = [*messages, *events]
-        len_item = len(message_and_event_list) 
-        with_item = len_item-max_massage if len_item > max_massage else 0
-
-        sorted_message_event_list = sorted(message_and_event_list, key=lambda x: x.timestamp)[with_item:]
-        
-        if sorted_message_event_list:
-            context["next_cursor"] = sorted_message_event_list[0].timestamp.isoformat()
+        if items_chat:
+            context["next_cursor"] = items_chat[0].timestamp.isoformat()
         else:
             context["next_cursor"] = None
 
@@ -184,7 +160,7 @@ class ChatView(HomeView):
             context["is_delete"] = True
         
         context['group'] = group
-        context['messages_event'] = sorted_message_event_list
+        context['messages_event'] = items_chat
         context['group_member'] = group.get_name(self.request.user)
 
         return context

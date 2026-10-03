@@ -111,7 +111,8 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = "login.User"
 
-LIMIT_MESSAGE = 10
+LIMIT_MESSAGE = 5
+
 
 # Email 
 EMAIL_HOST = "smtp.gmail.com"
