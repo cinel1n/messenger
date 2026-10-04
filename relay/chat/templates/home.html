@@ -74,8 +74,8 @@ Home
 
 
     <div class="chat-mess" data-next-cursor="{{ next_cursor|default:'' }}" style="margin-top:1vh"   hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-
     {% endif %}
+    
         {% for mess in messages_event %}
 
         {% if mess.type_content == "message" %}
@@ -86,7 +86,7 @@ Home
         <div class="mes-1" >
         {% endif %}
 
-            <img class="avatar-user" src="{{mess.author.avatar.url }}">
+            <img class="avatar-user" src="{{mess.author.get_avatar_url }}">
             <p class="text-start text-break " id="mess-content-{{mess.id}}">{{ mess.content }} </p>
             
             {% if mess.author == user %}
@@ -163,8 +163,6 @@ Home
         chatWebSocket.onmessage = function (e) {
             const data = JSON.parse(e.data)
 
-            console.log("Получено сообщение:", data)
-
             if (data.type === "error") {
                 showError(data.message)
                 return
@@ -172,8 +170,6 @@ Home
 
 
             if (data.type === "chat_message" || data.type === "text_message") {
-                // Добавляем сообщение в чат
-                console.log(data.avatar)
                 addMessageToChat(data.message, data.author, data.avatar)
 
                 // Обновляем последнее сообщение в списке
@@ -215,7 +211,6 @@ Home
 
         const avatar = document.createElement('img')
         avatar.className = 'avatar-user'
-        console.log(avatarUrl)
         avatar.src = avatarUrl
 
         const message = document.createElement('p')
@@ -394,6 +389,7 @@ Home
 
                         deleteMessage.setAttribute(
                             "hx-delete",
+                            
                             `/chat/delete-message/${item.id}/`
                         );
 

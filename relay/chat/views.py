@@ -120,7 +120,7 @@ def old_message(request, uuid):
                     if item.type_content() == "message"
                     else None
                 ),
-                "avatar": item.author.avatar.url if item.type_content() == "message" else None, 
+                "avatar": item.author.get_avatar_url() if item.type_content() == "message" else None, 
             }
             for item in items[::-1]
         ], 

@@ -250,9 +250,6 @@
 }
 
 
-/* =========================
-   Общая область чатов
-   ========================= */
 
 .chats {
     display: flex;
@@ -262,14 +259,14 @@
 }
 
 .delete-message-btn {
-    width: 32px;
-    height: 32px;
+
 
     display: flex;
     align-items: center;
     justify-content: center;
 
     margin-left: 8px;
+    margin-right:8px;
     padding: 0;
 
     background: transparent;

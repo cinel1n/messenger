@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 import uuid
 from django_ratelimit.decorators import ratelimit
 from .validators import validate_avatar_size
+from relay.settings import DEFAULT_AVATAR
+from django.templatetags.static import static
 
 
 class UserManager(BaseUserManager):
@@ -56,6 +58,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.first_name}"
+
+    def get_avatar_url(self):
+        if self.avatar:
+            return self.avatar.url
+        return static(DEFAULT_AVATAR)
 
     class Meta:
         constraints = [  #list of database constraint objects

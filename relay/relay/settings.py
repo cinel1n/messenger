@@ -111,8 +111,8 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = "login.User"
 
-LIMIT_MESSAGE = 5
-
+LIMIT_MESSAGE = 50
+DEFAULT_AVATAR = "image/none_avatar.jpg"
 
 # Email 
 EMAIL_HOST = "smtp.gmail.com"
