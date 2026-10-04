@@ -335,24 +335,18 @@ Home
         isLoading = true;
         button.disabled = true;
 
-        const oldScrollHeight =
-            chatMessages.scrollHeight;
+        const oldScrollHeight = chatMessages.scrollHeight;
 
-        const oldScrollTop =
-            chatMessages.scrollTop;
+        const oldScrollTop = chatMessages.scrollTop;
 
 
         try {
-
             const url =
                 "{% url 'chat-history' group.uuid %}" +
                 "?before=" +
                 encodeURIComponent(nextCursor);
 
-
-            const response =
-                await fetch(url);
-
+            const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error(
@@ -360,60 +354,86 @@ Home
                 );
             }
 
-
-            const data =
-                await response.json();
-
+            const data = await response.json();
 
             for (const item of data.messages) {
-
-                const messageDiv =
-                    document.createElement("div");
+                const messageDiv = document.createElement("div");
 
                 messageDiv.className =
                     item.author === "{{ user.username }}"
                         ? "mes-1 mes-me"
                         : "mes-1";
 
-
                 if (item.type === "message") {
 
-                    const avatar =
-                        document.createElement("img");
+                    const avatar = document.createElement("img");
+                    avatar.className = "avatar-user";
+                    avatar.src = item.avatar;
 
-                    avatar.className =
-                        "avatar-user";
+                    const message = document.createElement("p");
+                    message.className = "text-start text-break";
+                    message.textContent = item.content;
 
-                    avatar.src =
-                        "{% static 'image/Bez_foto_7.jpg' %}";
-
-
-                    const message =
-                        document.createElement("p");
-
-                    message.className =
-                        "text-start text-break";
-
-                    message.textContent =
-                        item.content;
-
-
-                    const time =
-                        document.createElement("span");
-
-                    time.textContent =
-                        new Date(item.timestamp)
-                            .toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit"
-                            });
-
+                    const time = document.createElement("span");
+                    time.textContent = new Date(item.timestamp).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    });
 
                     messageDiv.appendChild(avatar);
                     messageDiv.appendChild(message);
-                    messageDiv.appendChild(time);
+                    
 
+
+                    // Кнопка удаления только для автора сообщения
+                    if (item.author === "{{ user.username }}") {
+
+                        const deleteMessage = document.createElement("a");
+
+                        deleteMessage.className = "delete-message-btn";
+
+                        deleteMessage.setAttribute(
+                            "hx-delete",
+                            `/chat/delete-message/${item.id}/`
+                        );
+
+                        deleteMessage.setAttribute(
+                            "hx-confirm",
+                            `Are you sure you want delete the message "${item.content}"?`
+                        );
+
+                        deleteMessage.setAttribute(
+                            "hx-target",
+                            `#mess-content-${item.id}`
+                        );
+
+                        deleteMessage.setAttribute(
+                            "hx-swap",
+                            "innerHTML"
+                        );
+
+
+                        // SVG иконка корзины
+                        deleteMessage.innerHTML = `
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                fill="currentColor"
+                                class="bi bi-trash"
+                                viewBox="0 0 16 16"
+                            >
+                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                            </svg>
+                        `;
+
+                        messageDiv.appendChild(deleteMessage);
+                    }
+                    messageDiv.appendChild(time);
                 }
+
+
 
 
                 else if (item.type === "event") {

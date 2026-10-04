@@ -112,6 +112,7 @@ class GroupConsumer(AsyncWebsocketConsumer):
         """
         message = event.get("message")
         avatar = event.get("avatar")
+        
         returned_data = {
             "type": "text_message",
             "message": message,
