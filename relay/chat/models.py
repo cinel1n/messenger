@@ -26,15 +26,7 @@ class Group(models.Model):
     def get_absolute_url(self):
         return reverse("group", args=[str(self.uuid)])
 
-    def add_user_to_group(self, user: User):
-        self.members.add(user)
-        self.event_set.create(type="Join", user=user)
-        self.save()
 
-    def remove_user_from_group(self, user: User):
-        self.members.remove(user)
-        self.event_set.create(type="Left", user=user)
-        self.save()
 
     def last_message(self):
         return self.message_set.order_by("-timestamp").first()
@@ -77,6 +69,11 @@ class GroupMemberModel(models.Model):
                 name="unique_group_member"
             )
         ]
+
+
+    def remove_user_from_group(self):
+        self.group.event_set.create(type="Left", user=self.user)
+        self.delete()
 
 
 class Message(models.Model):

@@ -121,12 +121,9 @@ def old_message(request, uuid):
             items[0].timestamp.isoformat()
             if items
             else None
-        ),
-        
-        
+        ),   
     }
     )
-
 
 
 class ChatView(HomeView):
@@ -271,8 +268,7 @@ def delete_group_member(request, id):
         (user_gm.is_admin and not member.is_admin and \
             not member.is_creator):
 
-        member.delete() 
-        Event.objects.create(type="Left", user=member.user, group=group)
+        member.remove_user_from_group() 
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
