@@ -18,11 +18,9 @@ Home
     {% for group in groups %}
     <a class="user-messege" id="{{group.group.uuid}}" href="{% url 'group' group.group.uuid %}">
       <!-- <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}"> -->
-       {% if group.avatar %}
-       <img class="avatar-user" src="{{group.avatar.url}}">
-       {% else%}
-        <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}">
-       {% endif %}
+       
+       <img class="avatar-user" src="{{group.avatar}}">
+
       <div>
         <h3 class="name-user">{{group.name}}</h3>
         <p class="last-message text-truncate">

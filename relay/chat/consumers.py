@@ -8,9 +8,6 @@ from .models import Event, Message, Group
 from django_ratelimit.decorators import ratelimit
 
 
-
-
-
 class GroupConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.group_uuid = str(self.scope["url_route"]["kwargs"]["uuid"])
@@ -101,7 +98,7 @@ class GroupConsumer(AsyncWebsocketConsumer):
                 "type": "text_message",
                 "message": message_content,
                 "author": author.username, 
-                "avatar": author.avatar.url if author.avatar else ""
+                "avatar": author.get_avatar_url()
             }
         )
 

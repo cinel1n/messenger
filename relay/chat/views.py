@@ -33,7 +33,8 @@ class HomeView(LoginRequiredMixin, ListView):
     login_url = reverse_lazy('log')
 
     def get_queryset(self):
-        return Group.objects.filter(members=self.request.user)
+        groups = Group.objects.filter(members=self.request.user)
+        return sorted(groups, key=lambda x:(x.last_message().timestamp if x.last_message() else x.timestamp))[::-1]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -41,20 +42,12 @@ class HomeView(LoginRequiredMixin, ListView):
         group_list = []
 
         for group in self.object_list:
-            if group.type == group.GroupType.PUBLIC:
-                data = {
-                    "name": group.name, 
-                    "group": group, 
-                    "avatar":group.avatar, 
-                }
-
-            else:
-                member = group.get_name(self.request.user)
-                data = {
-                    "name": member.first_name, 
-                    "group": group, 
-                    "avatar":member.avatar, 
-                }
+            data = {
+                "name": group.get_name(self.request.user), 
+                "group": group, 
+                "avatar":group.get_avatar(self.request.user), 
+            }
+    
             group_list.append(data)
 
         context['groups'] = group_list

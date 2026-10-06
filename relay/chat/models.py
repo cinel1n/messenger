@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from uuid import uuid4
 from login.validators import validate_avatar_size
 from django.urls import reverse
+from relay.settings import DEFAULT_AVATAR
+from django.templatetags.static import static
 
 User = get_user_model()
 
@@ -17,6 +19,7 @@ class Group(models.Model):
     members = models.ManyToManyField(User, through='GroupMemberModel')
     avatar = models.ImageField(upload_to="avatars/", blank=True, default="", 
         validators=[validate_avatar_size])
+    timestamp = models.DateTimeField(auto_now_add=True)
     type = models.CharField(max_length=10, choices=GroupType.choices, default=GroupType.PRIVATE)
 
 
@@ -41,11 +44,20 @@ class Group(models.Model):
             return self.name
 
         elif user:
-            member = [i for i in self.members.all() if i != user][0]
-            return member
+            companion = self.members.all().exclude(id=user.id)[0]
+            return companion
 
         return None
-        
+
+    def get_avatar(self, user=None):
+        if self.type == self.GroupType.PUBLIC:
+            if self.avatar:
+                return self.avatar.url
+            return static(DEFAULT_AVATAR)
+
+        if user:
+            companion = self.members.all().exclude(id=user.id).first()
+            return companion.get_avatar_url()
 
 
 class GroupMemberModel(models.Model):
