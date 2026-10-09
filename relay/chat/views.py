@@ -20,11 +20,15 @@ from rest_framework import permissions
 from .serializers import UserSerializer, GroupSerializer
 from login.validators import compress_image
 from relay.settings import LIMIT_MESSAGE
+from django.db.models import OuterRef, Subquery
 from django.db import transaction
 from django.core.paginator import Paginator
+from django.utils.dateparse import parse_datetime
 from django.http import JsonResponse
 from django.db.models import Q
-from django.utils.dateparse import parse_datetime
+from django.db.models import Prefetch
+from django.contrib.auth.decorators import login_required
+from django.db.models.functions import Coalesce
 
 
 class HomeView(LoginRequiredMixin, ListView):
@@ -33,8 +37,29 @@ class HomeView(LoginRequiredMixin, ListView):
     login_url = reverse_lazy('log')
 
     def get_queryset(self):
-        groups = Group.objects.filter(members=self.request.user)
-        return sorted(groups, key=lambda x:(x.last_message().timestamp if x.last_message() else x.timestamp))[::-1]
+
+        last_message = Message.objects.filter(
+            group=OuterRef("pk") # pk группы, которую обрабатывает запрос 
+        ).order_by("-timestamp", "-id")
+        
+        groups = Group.objects.filter(
+            members=self.request.user
+        ).annotate( # добавляет новое поле к каждому элементу в QuerySet
+            last_message_time=Subquery( # позволяет вставить полноценный SQL-подзапрос внутрь этого аннотирования
+                last_message.values("timestamp")[:1]
+            ),
+            last_message_content=Subquery(
+                last_message.values("content")[:1]
+            ),
+            last_activity=Coalesce("last_message_time", "timestamp"),
+        ).order_by(
+            "last_activity"
+        ).prefetch_related(
+            "members"
+        )
+
+        return groups[::-1]
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -60,9 +85,13 @@ def chat_data(request, uuid):
 
     # дата самаго старшего сообщения
     before = request.GET.get("before")
+    before_data = None 
+
 
     messages = Message.objects.filter(
         group=group
+    ).select_related(
+        "author"
     )
 
     events = Event.objects.filter(
@@ -72,7 +101,11 @@ def chat_data(request, uuid):
     max_message = LIMIT_MESSAGE
     
     if before:
-        before_dt = parse_datetime(before)
+        try:
+            before_dt = parse_datetime(before)
+        except ValueError:
+            return HttpResponse("Date is incorect", 400)
+
         # все сообщения и события, что старше before
         messages = messages.filter(
             timestamp__lt=before_dt
@@ -80,6 +113,7 @@ def chat_data(request, uuid):
         events = events.filter(
             timestamp__lt=before_dt
         )
+
     # сортировка по дате и id 
     messages = messages.order_by("-timestamp", "-id")[:max_message]
     events = events.order_by("-timestamp", "-id")[:max_message]
@@ -92,7 +126,8 @@ def chat_data(request, uuid):
     items = sorted(message_and_event_list, key=lambda x: (x.timestamp, x.id))[with_item:]
     return items
 
- 
+
+@login_required
 def old_message(request, uuid):
     items = chat_data(request=request, uuid=uuid)
     return JsonResponse({

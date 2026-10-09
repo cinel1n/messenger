@@ -12,7 +12,7 @@ class GroupMemberInline(admin.TabularInline):
 
 
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ['name', 'type']
+    list_display = ['name', 'type', "uuid"]
     inlines = [GroupMemberInline]
 
 

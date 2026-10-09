@@ -117,7 +117,7 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = "login.User"
 
-LIMIT_MESSAGE = 50
+LIMIT_MESSAGE = 2000
 DEFAULT_AVATAR = "image/none_avatar.jpg"
 
 # Email 

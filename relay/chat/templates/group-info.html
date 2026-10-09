@@ -21,8 +21,9 @@
     <div class="group-header">
         <h2>{{ group.name }}</h2>
         <span class="group-type">{{ group.get_type_display }}</span>
+        
     </div>
-    
+    <span>Created: {{ group.timestamp }}</span>
 
     <div class="members-header">
         <h3>Members</h3>
@@ -34,14 +35,12 @@
             <div class="member-item" id="member-{{member.id}}">
 
                 <div class="member-avatar">
-                    
-                    {% if member.user.avatar %}
-                        <img
-                        src="{{ member.user.avatar.url }}"
-                        alt="Avatar"
-                        class="profile-avatar-preview"
-                        >
-                    {% endif %}
+                 
+                    <img
+                    src="{{ member.user.get_avatar_url }}"
+                    alt="Avatar"
+                    class="profile-avatar-preview"
+                    >
                 </div>
 
                 <div class="member-info">
