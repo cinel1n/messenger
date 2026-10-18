@@ -172,6 +172,7 @@ Home
 
                 // Обновляем последнее сообщение в списке
                 updateLastMessage(current_chat_uuid, data.message, data.author)
+                updateLastChat(current_chat_uuid, data.message, data.author)
             }
         }
 
@@ -242,6 +243,11 @@ Home
             lastMessageElem.textContent = prefix + (message.length > 30 ?
                 message.substring(0, 30) + '...' : message)
         }
+    }
+    function updateLastChat(chat_uuid, message,sender){
+        const chatElement = document.getElementById(chat_uuid)
+        const list = chatElement.parentElement;
+        list.prepend(chatElement)
     }
     
     document.addEventListener('DOMContentLoaded', function() {
