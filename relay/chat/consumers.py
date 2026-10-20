@@ -10,26 +10,7 @@ from django_ratelimit.decorators import ratelimit
 
 class GroupConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.group_uuid = str(self.scope["url_route"]["kwargs"]["uuid"])
-        
         self.user = self.scope["user"]
-
-        is_member = await database_sync_to_async(
-            lambda: Group.objects.filter(
-                uuid=self.group_uuid,
-                members=self.user,
-            ).first()
-        )()
-
-        if not is_member:
-            await self.close()
-            return
-
-        self.group = await database_sync_to_async(Group.objects.get)(uuid=self.group_uuid)
-
-        await self.channel_layer.group_add( # добавление в слой
-            self.group_uuid, self.channel_name) # channel_name - адрес websocket соединения
-
         # персональная группа для точечных команд конкретному пользователю
         self.user_channel_group = f"user_{self.user.pk}"
         await self.channel_layer.group_add(self.user_channel_group, self.channel_name)
@@ -74,7 +55,11 @@ class GroupConsumer(AsyncWebsocketConsumer):
 
         type = text_data.get("type", None)
         message_content = text_data.get("message", None)
+        self.group_uuid = text_data.get("group_uuid")
         author = self.user
+        group =await  database_sync_to_async(Group.objects.get)(
+            uuid=self.group_uuid
+        )
 
         if not await self.valid_text_data(type, message_content):
             return
@@ -89,50 +74,43 @@ class GroupConsumer(AsyncWebsocketConsumer):
         await database_sync_to_async(Message.objects.create)(
             author=author,
             content=message_content,
-            group=self.group
+            group=group
         )
 
-        await self.channel_layer.group_send( # попадает в Redis
-            self.group_uuid,
-            {
-                "type": "text_message",
-                "message": message_content,
-                "author": author.username, 
-                "avatar": author.get_avatar_url()
-            }
-        )
+        payload = {
+            "type":"text_message", 
+            "group_uuid": self.group_uuid, 
+            "message": message_content,
+            "author": author.username, 
+            "avatar": author.get_avatar_url()
+        }
+        member_ids = [
+            id_member async for id_member in group.members.values_list("id", flat=True)
+        ]
+        for id_member in member_ids:
+            await self.channel_layer.group_send( # попадает в Redis
+                f"user_{id_member}",
+                {
+                    "type": "text_message",
+                    "payload": payload
+                }
+            )
 
 
     async def text_message(self, event):
         """
-        после receive 
+        после receive. отправка в браузер
         """
-        message = event.get("message")
-        avatar = event.get("avatar")
-        
-        returned_data = {
-            "type": "text_message",
-            "message": message,
-            "avatar": avatar
-        }
-        await self.send(json.dumps(returned_data))
+        payload = event.get("payload")
+        await self.send(json.dumps(payload))
 
     async def event_message(self, event):
-        message = event.get("message")
-        user = event.get("user", None)
-        status = event.get("status", None)
-
-        returned_data = {
-            "type": "event_message",
-            "message": message,
-            "status": status,
-            "user": user
-        }
-        await self.send(json.dumps(returned_data))
+        payload = event.get("payload")
+        await self.send(json.dumps(payload))
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
-            self.group_uuid,
+            self.user_channel_group,
             self.channel_name
         )
         if hasattr(self, "user_channel_group"): # проверка на атрибут

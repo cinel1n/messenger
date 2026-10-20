@@ -132,8 +132,9 @@ Home
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-  {% if group_member %}
+  
   <script>
+    console.log("OK")
     // Автоскролл к последнему сообщению при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
         const messagesContainer = document.querySelector('.chat-mess');
@@ -142,51 +143,51 @@ Home
         }
     });
 
-    base_url = `${window.location.hostname}:${window.location.port}`
+    base_url = `${window.location.hostname}:${window.location.port}/`
 
-    // Получаем UUID текущего чата
+
     const path_parts = window.location.pathname.split('/').filter(Boolean)
     const current_chat_uuid = path_parts.length >= 2 ? path_parts[1] : null
 
-    // WebSocket для чата (только если есть открытый чат)
-    let chatWebSocket = null
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+    const chatWebSocket = new WebSocket(`${protocol}://${window.location.host}/ws/`)
 
-    if (current_chat_uuid) {
-        chatWebSocket = new WebSocket(`ws://${base_url}/groups/${current_chat_uuid}/`)
+    chatWebSocket.onopen = function (e) {
+            console.log("Подключен к чату:")
+    }
 
-        chatWebSocket.onopen = function (e) {
-            console.log("Подключен к чату:", current_chat_uuid)
+    chatWebSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data)
+
+        if (data.type === "error") {
+            showError(data.message)
+            return
         }
 
-        chatWebSocket.onmessage = function (e) {
-            const data = JSON.parse(e.data)
 
-            if (data.type === "error") {
-                showError(data.message)
-                return
-            }
+        if (data.type === "text_message") {
 
 
-            if (data.type === "chat_message" || data.type === "text_message") {
+            if (data.group_uuid === current_chat_uuid){
                 addMessageToChat(data.message, data.author, data.avatar)
-
-                // Обновляем последнее сообщение в списке
-                updateLastMessage(current_chat_uuid, data.message, data.author)
-                updateLastChat(current_chat_uuid, data.message, data.author)
             }
-        }
-
-        chatWebSocket.onclose = function (e) {
-            console.error('Chat socket closed')
-            console.log("code:", e.code)
-            console.log("reason:", e.reason)
-            console.log("clean:", e.wasClean)
-        }
-
-        chatWebSocket.onerror = function(e) {
-            console.error('WebSocket error:', e)
+            // Обновляем последнее сообщение в списке
+            updateLastMessage(data.group_uuid, data.message, data.author)
+            updateLastChat(data.group_uuid)
         }
     }
+
+    chatWebSocket.onclose = function (e) {
+        console.error('Chat socket closed')
+        console.log("code:", e.code)
+        console.log("reason:", e.reason)
+        console.log("clean:", e.wasClean)
+    }
+
+    chatWebSocket.onerror = function(e) {
+        console.error('WebSocket error:', e)
+    }
+
 
     function showError(message) {
         const errorDiv = document.querySelector('#ws-error')
@@ -244,8 +245,9 @@ Home
                 message.substring(0, 30) + '...' : message)
         }
     }
-    function updateLastChat(chat_uuid, message,sender){
+    function updateLastChat(chat_uuid){
         const chatElement = document.getElementById(chat_uuid)
+        if (!chatElement) return 
         const list = chatElement.parentElement;
         list.prepend(chatElement)
     }
@@ -282,10 +284,10 @@ Home
                     }
 
                     if (chatWebSocket.readyState === WebSocket.OPEN) {
-                        console.log('Отправляю сообщение:', content)
 
                         chatWebSocket.send(JSON.stringify({
                             'type': "text_message",
+                            'group_uuid': current_chat_uuid, 
                             'message': content
                         }))
 
@@ -309,6 +311,8 @@ Home
 
     document.addEventListener("DOMContentLoaded", function () {
 
+
+    {% if group_member %}
     const button =
         document.getElementById("load-more-messages");
 
