@@ -17,8 +17,6 @@ Home
 
     {% for group in groups %}
     <a class="user-messege" id="{{group.group.uuid}}" href="{% url 'group' group.group.uuid %}">
-      <!-- <img class="avatar-user" src="{% static 'image/Bez_foto_7.jpg' %}"> -->
-       
        <img class="avatar-user" src="{{group.avatar}}">
 
       <div>
@@ -31,8 +29,9 @@ Home
             {% endif %}
         </p>
 
+   
       </div>
-
+      {{group.no_read_message}}
     </a>
     {% endfor %}
 
@@ -40,15 +39,16 @@ Home
 
     
     <div class="chat col-9">
-        {% if group_member %}
+        {% if group_name %}
+        
             <div class="user-messege user-current">
                 {% if group.type != group.GroupType.PUBLIC %}
-                <a href="{% url 'profile' group_member.username %}" class="name-user">
-                    {{ group_member }}
+                <a href="{% url 'profile' group_name.username %}" class="name-user">
+                    {{ group_name }}
                 </a>
                 {% else %}
                 <a href="{% url 'group-info' group.uuid %}" class="name-user">
-                    {{ group_member }}
+                    {{ group_name }}
                 </a>
                 {% endif %}
                 <div class="right-block">
@@ -145,6 +145,20 @@ Home
 
     base_url = `${window.location.hostname}:${window.location.port}/`
 
+    const CURRENT_USER = "{{ user.username|escapejs }}"
+    const DELETE_ICON = `
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                fill="currentColor"
+                                class="bi bi-trash"
+                                viewBox="0 0 16 16"
+                            >
+                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                            </svg>
+                        `
 
     const path_parts = window.location.pathname.split('/').filter(Boolean)
     const current_chat_uuid = path_parts.length >= 2 ? path_parts[1] : null
@@ -169,7 +183,10 @@ Home
 
 
             if (data.group_uuid === current_chat_uuid){
-                addMessageToChat(data.message, data.author, data.avatar)
+                addMessageToChat({
+                    type: "message", id: data.id, content: data.message,
+                    author: data.author, avatar: data.avatar, timestamp: data.timestamp,
+                })
             }
             // Обновляем последнее сообщение в списке
             updateLastMessage(data.group_uuid, data.message, data.author)
@@ -196,41 +213,54 @@ Home
 
         errorDiv.textContent = message
     }
-    function addMessageToChat(content, sender, avatarUrl) {
-        const chatMessages = document.querySelector('.chat-mess')
 
-        if (!chatMessages) return
+    function createItemElement(item) {
+        const div = document.createElement("div")
+        div.className = item.author === CURRENT_USER ? "mes-1 mes-me" : "mes-1"
 
-        const isCurrentUser = sender === '{{ user.username }}'
+        const text = document.createElement("p")
+        text.className = "text-start text-break"
 
-        const messageDiv = document.createElement('div')
+        if (item.type === "message") {
+            const avatar = document.createElement("img")
+            avatar.className = "avatar-user"
+            avatar.src = item.avatar
 
-        messageDiv.className = isCurrentUser
-            ? 'mes-1 mes-me'
-            : 'mes-1'
+            text.id = `mess-content-${item.id}`      // нужен для hx-target
+            text.textContent = item.content
+            div.append(avatar, text)
 
-        const avatar = document.createElement('img')
-        avatar.className = 'avatar-user'
-        avatar.src = avatarUrl
+            if (item.author === CURRENT_USER) {
+                const del = document.createElement("a")
+                del.className = "delete-message-btn"
+                del.setAttribute("hx-delete", `/chat/delete-message/${item.id}/`)
+                del.setAttribute("hx-confirm", `Are you sure you want to delete the message "${item.content}"?`)
+                del.setAttribute("hx-target", `#mess-content-${item.id}`)
+                del.setAttribute("hx-swap", "innerHTML")
+                del.innerHTML = DELETE_ICON
+                div.append(del)
+            }
+        } else {                                      // событие (вошёл / вышел)
+            text.textContent = item.content
+            div.append(text)
+        }
 
-        const message = document.createElement('p')
-        message.className = 'text-start text-break'
-        message.textContent = content
-
-        const time = document.createElement('span')
-        time.textContent = new Date().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit'
+        const time = document.createElement("span")
+        time.textContent = new Date(item.timestamp).toLocaleTimeString([], {
+            hour: "2-digit", minute: "2-digit",
         })
-
-        messageDiv.appendChild(avatar)
-        messageDiv.appendChild(message)
-        messageDiv.appendChild(time)
-
-        chatMessages.appendChild(messageDiv)
-        chatMessages.scrollTop = chatMessages.scrollHeight
+        div.append(time)
+        return div
     }
-
+    function addMessageToChat(item) {
+        console.log("OKK")
+        const box = document.querySelector(".chat-mess")
+        if (!box) return
+        const el = createItemElement(item)
+        box.append(el)
+        htmx.process(el)                              // см. ниже
+        box.scrollTop = box.scrollHeight
+    }
 
     // Функция обновления последнего сообщения в списке
     function updateLastMessage(chat_uuid, message, sender) {
@@ -308,11 +338,10 @@ Home
             chatMessages.scrollTop = chatMessages.scrollHeight
         }
     })
-
+    {% if group_name %}
     document.addEventListener("DOMContentLoaded", function () {
+    
 
-
-    {% if group_member %}
     const button =
         document.getElementById("load-more-messages");
 
@@ -360,124 +389,13 @@ Home
             const data = await response.json();
 
             for (const item of data.messages) {
-                const messageDiv = document.createElement("div");
-
-                messageDiv.className =
-                    item.author === "{{ user.username }}"
-                        ? "mes-1 mes-me"
-                        : "mes-1";
-
-                if (item.type === "message") {
-
-                    const avatar = document.createElement("img");
-                    avatar.className = "avatar-user";
-                    avatar.src = item.avatar;
-
-                    const message = document.createElement("p");
-                    message.className = "text-start text-break";
-                    message.textContent = item.content;
-
-                    const time = document.createElement("span");
-                    time.textContent = new Date(item.timestamp).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    });
-
-                    messageDiv.appendChild(avatar);
-                    messageDiv.appendChild(message);
-                    
-
-
-                    // Кнопка удаления только для автора сообщения
-                    if (item.author === "{{ user.username }}") {
-
-                        const deleteMessage = document.createElement("a");
-
-                        deleteMessage.className = "delete-message-btn";
-
-                        deleteMessage.setAttribute(
-                            "hx-delete",
-                            
-                            `/chat/delete-message/${item.id}/`
-                        );
-
-                        deleteMessage.setAttribute(
-                            "hx-confirm",
-                            `Are you sure you want delete the message "${item.content}"?`
-                        );
-
-                        deleteMessage.setAttribute(
-                            "hx-target",
-                            `#mess-content-${item.id}`
-                        );
-
-                        deleteMessage.setAttribute(
-                            "hx-swap",
-                            "innerHTML"
-                        );
-
-
-                        // SVG иконка корзины
-                        deleteMessage.innerHTML = `
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                fill="currentColor"
-                                class="bi bi-trash"
-                                viewBox="0 0 16 16"
-                            >
-                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                            </svg>
-                        `;
-
-                        messageDiv.appendChild(deleteMessage);
-                    }
-                    messageDiv.appendChild(time);
-                }
-
-
-
-
-                else if (item.type === "event") {
-
-                    const message =
-                        document.createElement("p");
-
-                    message.className =
-                        "text-start text-break";
-
-                    message.textContent =
-                        item.content;
-
-
-                    const time =
-                        document.createElement("span");
-
-                    time.textContent =
-                        new Date(item.timestamp)
-                            .toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit"
-                            });
-
-
-                    messageDiv.appendChild(message);
-                    messageDiv.appendChild(time);
-                }
-
-
-                chatMessages.prepend(messageDiv);
+                const el = createItemElement(item)
+                chatMessages.prepend(el)
+                htmx.process(el)
             }
 
-
-            /*
-             * Сохраняем положение пользователя
-             * после добавления старых сообщений
-             */
-            const newScrollHeight =
-                chatMessages.scrollHeight;
+            const newScrollHeight = chatMessages.scrollHeight;
+                
 
             chatMessages.scrollTop =
                 oldScrollTop +
@@ -487,16 +405,11 @@ Home
             /*
              * Получаем cursor для следующей загрузки
              */
-            nextCursor =
-                data.next_cursor || null;
-
-
-            chatMessages.dataset.nextCursor =
-                nextCursor || "";
-
-
+            nextCursor = data.next_cursor || null;
+                
+            chatMessages.dataset.nextCursor =nextCursor || "";
+                
             if (!nextCursor) {
-
                 button.textContent =
                     "All messages have been loaded.";
 
@@ -505,16 +418,13 @@ Home
 
 
         } catch (error) {
-
             console.error(
                 "error load messages:",
                 error
             );
 
         } finally {
-
             isLoading = false;
-
             if (nextCursor) {
                 button.disabled = false;
             }
@@ -522,12 +432,13 @@ Home
     });
 
 });
-
-</script>
 {% endif%}
+</script>
+
 {% endblock %}
 
 
 {% block search_user %}
 {% include "includes/result_user.html" %}
-{% endblock%}
+{% endblock %}
+    

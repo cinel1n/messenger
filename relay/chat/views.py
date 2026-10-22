@@ -15,6 +15,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Count
 from rest_framework import viewsets
 from channels.layers import get_channel_layer
+from django.core.exceptions import BadRequest
 from asgiref.sync import async_to_sync
 from rest_framework import permissions
 from .serializers import UserSerializer, GroupSerializer
@@ -42,6 +43,21 @@ class HomeView(LoginRequiredMixin, ListView):
             group=OuterRef("pk") # pk группы, которую обрабатывает запрос 
         ).order_by("-timestamp", "-id")
         
+        group_member_model = GroupMemberModel.objects.filter(
+            user=self.request.user, 
+            group=OuterRef("pk")
+            )[:1]
+
+        unread = (
+            Message.objects
+            .filter(group=OuterRef("pk"), id__gt=OuterRef("last_read_message_id"))
+            .exclude(author=self.request.user)
+            .order_by()
+            .values("group")
+            .annotate(c=Count("pk"))
+            .values("c")
+        )
+
         groups = Group.objects.filter(
             members=self.request.user
         ).annotate( # добавляет новое поле к каждому элементу в QuerySet
@@ -51,26 +67,34 @@ class HomeView(LoginRequiredMixin, ListView):
             last_message_content=Subquery(
                 last_message.values("content")[:1]
             ),
+            # права и данные юзера в этой группе 
+            last_read_message_id=Subquery(
+                group_member_model.values("last_read_message_id")
+            ),
+            unread_count=Coalesce(Subquery(unread), 0),
             last_activity=Coalesce("last_message_time", "timestamp"),
+            
         ).order_by(
-            "last_activity"
+            "-last_activity"
         ).prefetch_related(
             "members"
         )
-
-        return groups[::-1]
+        
+        return groups
 
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         group_list = []
-
+        
         for group in self.object_list:
+            
             data = {
                 "name": group.get_name(self.request.user), 
                 "group": group, 
                 "avatar":group.get_avatar(self.request.user), 
+                "no_read_message": group.unread_count if group.unread_count != 0 else ""
             }
     
             group_list.append(data)
@@ -104,7 +128,10 @@ def chat_data(request, uuid):
         try:
             before_dt = parse_datetime(before)
         except ValueError:
-            return HttpResponse("Date is incorect", 400)
+            before_dt = None
+
+        if before_dt is None:
+            raise BadRequest("Invalid 'before'")
 
         # все сообщения и события, что старше before
         messages = messages.filter(
@@ -167,28 +194,31 @@ class ChatView(HomeView):
     login_url = reverse_lazy('log')
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        
         group_uuid = self.kwargs['uuid']
         group = get_object_or_404(Group, uuid=group_uuid, members=self.request.user)
 
         items_chat = chat_data(self.request, group_uuid)
-        
+
+        member_group = get_object_or_404(GroupMemberModel, group=group, user=self.request.user)
+
+        ids_message = [i.id for i in items_chat if i.type_content() == "message"]
+        if ids_message:
+            id_max = max(ids_message)
+            member_group.last_read_message_id = id_max
+            member_group.save()
+
+        context = super().get_context_data(**kwargs)
         if items_chat:
             context["next_cursor"] = items_chat[0].timestamp.isoformat()
         else:
             context["next_cursor"] = None
 
-        
-        member_group = get_object_or_404(GroupMemberModel, group=group, user=self.request.user)
-
-        # удаление чата 
-        context["is_delete"] = False
-        if group.type == group.GroupType.PRIVATE or member_group.is_creator:
-            context["is_delete"] = True
+        context["is_delete"] = group.type == group.GroupType.PRIVATE or member_group.is_creator
         
         context['group'] = group
         context['messages_event'] = items_chat
-        context['group_member'] = group.get_name(self.request.user)
+        context['group_name'] = group.get_name(self.request.user)
 
         return context
 

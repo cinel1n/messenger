@@ -84,6 +84,7 @@ class GroupMemberModel(models.Model):
     joined_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
     last_read_at = models.DateTimeField(null=True, blank=True)
     is_creator = models.BooleanField(default=False)
+    last_read_message_id = models.BigIntegerField(default=0)
 
     class Meta:
         constraints = [
