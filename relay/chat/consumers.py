@@ -4,9 +4,9 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import WebsocketConsumer, AsyncWebsocketConsumer
 from login.models import User
 from django.utils.decorators import method_decorator
-from .models import Event, Message, Group
+from .models import Event, Message, Group, GroupMemberModel
 from django_ratelimit.decorators import ratelimit
-
+from django.shortcuts import get_object_or_404
 
 class GroupConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -19,7 +19,6 @@ class GroupConsumer(AsyncWebsocketConsumer):
     
 
     async def valid_text_data(self,type=None, message_content=None):
-        
         if type != "text_message":
             await self.send(text_data=json.dumps({
                 "type": "error",
@@ -27,7 +26,11 @@ class GroupConsumer(AsyncWebsocketConsumer):
             }))
             return False
         
-        if message_content is None or len(message_content) > 4096 or  message_content.strip() == "":
+        if type=="text_message" and  \
+            (message_content is None or 
+            len(message_content) > 4096 or 
+             message_content.strip() == ""):
+
             await self.send(text_data=json.dumps({
                 "type": "error",
                 "message":"message too long or empry"
@@ -36,6 +39,12 @@ class GroupConsumer(AsyncWebsocketConsumer):
 
         return True
 
+    @database_sync_to_async
+    def count_read_messages(self, group, id_message):
+        GroupMemberModel.objects.filter(
+            group=group, user=self.user, last_read_message_id__lt=id_message
+        ).update(last_read_message_id=id_message)
+    
     async def receive(self, text_data=None, bytes_data=None):
         """
         После отправки сообщения пользователем на сервер
@@ -57,12 +66,27 @@ class GroupConsumer(AsyncWebsocketConsumer):
         message_content = text_data.get("message", None)
         self.group_uuid = text_data.get("group_uuid")
         author = self.user
-        group =await  database_sync_to_async(Group.objects.get)(
-            uuid=self.group_uuid
+        group = await database_sync_to_async(Group.objects.get)(
+            uuid=self.group_uuid,
+            members=self.user
         )
 
+        if type == "read":
+            try:
+                id_message = int(text_data.get("message_id", None))
+            except (ValueError, ValueError):
+                return self.self.send(text_data=json.dumps({
+                "type": "error",
+                "message":f"json decode error: {id_message}"
+            }))
+
+            if id_message is not None:
+                await self.count_read_messages(group, id_message) 
+            
+            return 
+
         if not await self.valid_text_data(type, message_content):
-            return
+            return 
 
         if not await check_message_rate_limit(self.user.id):  # check message
             await self.send(text_data=json.dumps({
@@ -71,16 +95,17 @@ class GroupConsumer(AsyncWebsocketConsumer):
             }))
             return 
 
-        await database_sync_to_async(Message.objects.create)(
+        message = await database_sync_to_async(Message.objects.create)(
             author=author,
             content=message_content,
             group=group
-        )
+        )     
 
         payload = {
             "type":"text_message", 
             "group_uuid": self.group_uuid, 
             "message": message_content,
+            "message_id": message.id, 
             "author": author.username, 
             "avatar": author.get_avatar_url()
         }
@@ -98,9 +123,6 @@ class GroupConsumer(AsyncWebsocketConsumer):
 
 
     async def text_message(self, event):
-        """
-        после receive. отправка в браузер
-        """
         payload = event.get("payload")
         await self.send(json.dumps(payload))
 

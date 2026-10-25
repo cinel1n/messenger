@@ -31,7 +31,7 @@ Home
 
    
       </div>
-      {{group.no_read_message}}
+      <span id="count-no-read-{{group.group.uuid}}">{{group.no_read_message}}</span>
     </a>
     {% endfor %}
 
@@ -134,8 +134,6 @@ Home
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
   
   <script>
-    console.log("OK")
-    // Автоскролл к последнему сообщению при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
         const messagesContainer = document.querySelector('.chat-mess');
         if (messagesContainer) {
@@ -180,15 +178,30 @@ Home
 
 
         if (data.type === "text_message") {
-
-
             if (data.group_uuid === current_chat_uuid){
+                
+                chatWebSocket.send(JSON.stringify({
+                    'type': "read",
+                    'group_uuid': current_chat_uuid, 
+                    'message_id':data.message_id,
+
+                }))
+
                 addMessageToChat({
-                    type: "message", id: data.id, content: data.message,
+                    type: "message", id: data.message_id, content: data.message,
                     author: data.author, avatar: data.avatar, timestamp: data.timestamp,
                 })
             }
-            // Обновляем последнее сообщение в списке
+            else {
+                const count_no_read = document.getElementById(`count-no-read-${data.group_uuid}`)
+                
+                if (count_no_read){
+                    current = parseInt(count_no_read.textContent) || 0 
+                    count_no_read.textContent = current + 1 
+                }
+                
+            }
+
             updateLastMessage(data.group_uuid, data.message, data.author)
             updateLastChat(data.group_uuid)
         }
@@ -226,7 +239,7 @@ Home
             avatar.className = "avatar-user"
             avatar.src = item.avatar
 
-            text.id = `mess-content-${item.id}`      // нужен для hx-target
+            text.id = `mess-content-${item.id}`      
             text.textContent = item.content
             div.append(avatar, text)
 
@@ -253,7 +266,6 @@ Home
         return div
     }
     function addMessageToChat(item) {
-        console.log("OKK")
         const box = document.querySelector(".chat-mess")
         if (!box) return
         const el = createItemElement(item)
@@ -309,7 +321,7 @@ Home
                 function sendMessage() {
                     const content = messageInput.value.trim()
                     if (!content) {
-                        alert('Введите сообщение!')
+                        alert('enter a message!')
                         return
                     }
 
@@ -317,16 +329,16 @@ Home
 
                         chatWebSocket.send(JSON.stringify({
                             'type': "text_message",
+                            'status':'read',
                             'group_uuid': current_chat_uuid, 
                             'message': content
                         }))
 
-                        // Очищаем поле
                         messageInput.value = ''
                         messageInput.focus()
                     } else {
-                        console.error('WebSocket не подключен')
-                        alert('Нет соединения с сервером!')
+                        console.error('WebSocket no connected')
+                        alert('No connected with server!')
                     }
                 }
             }
