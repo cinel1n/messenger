@@ -5,101 +5,133 @@
 <link rel="stylesheet" href="{% static 'css/group-info.css' %}">
 {% endblock %}
 
-{% block title %}{{object.name}}{% endblock%}
+{% block title %}{{ object.name }}{% endblock %}
 
 {% block content %}
 
 <div class="group-info-card" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
-<form method="POST" class="group-edit-form" enctype="multipart/form-data">
-        {% csrf_token %}
-        {% if object.avatar%}
-        <img
-            src="{{ object.avatar.url }}"
-            alt="Avatar"
-            class="profile-avatar-preview"
-        >
-        {% endif %}
-        {% for field in form %}
-            <div class="tab-pane">
-                <label class="form-label" for="{{ field.id_for_label }}">
-                    {{ field.label }}
-                </label>
-                {{ field }}
+    <header class="group-head">
+        <h2>{{ object.name }}</h2>
+        <span class="group-type">{{ object.get_type_display }}</span>
+    </header>
 
-                {% if field.errors %}
-                    <div class="text-danger">
-                        {{ field.errors }}
-                    </div>
-                {% endif %}
-            </div>
+    {# ============ Редактирование группы ============ #}
+    <form method="post" class="group-edit-form" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if object.avatar %}
+        <img src="{{ object.avatar.url }}" alt="Group avatar" class="profile-avatar-preview">
+        {% endif %}
+
+        {% if form.non_field_errors %}
+        <div class="form-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for field in form %}
+        <div class="form-field">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
+            {% if field.errors %}<div class="form-errors">{{ field.errors }}</div>{% endif %}
+        </div>
         {% endfor %}
 
-    <button type="submit">
-        Сохранить
-    </button>
-</form>
+        <button type="submit" class="btn-save">Save</button>
+    </form>
 
+    {# ============ Участники ============ #}
     <div class="members-header">
         <h3>Members</h3>
-        <span>{{ group.members.count }}</span>
+        <span class="members-count" id="members-count">{{ members_info|length }}</span>
     </div>
-    <div id="notification"></div>
+
+    <div id="notification" aria-live="polite"></div>
+
     <div class="members-list">
         {% for member in members_info %}
-            <div class="member-item" id="member-{{member.id}}">
+        <div class="member-item"
+             id="member-{{ member.id }}"
+             data-admin="{% if member.is_admin %}true{% else %}false{% endif %}">
 
-                <div class="member-avatar">
-                    
-                    {% if member.user.avatar %}
-                        <img
-                        src="{{ member.user.avatar.url }}"
-                        alt="Avatar"
-                        class="profile-avatar-preview"
-                        >
-                    {% endif %}
-                </div>
+            <div class="member-avatar">
+                <img src="{{ member.user.get_avatar_url }}" alt="" loading="lazy">
+            </div>
 
-                <div class="member-info">
-                    <a href="{% url 'profile' member.user.username %}">
-                        {{ member.user.username }}
-                    </a>
-                    {% if member.user == request.user %}
-                        <span class="member-role">You</span>
-                    {% endif %}
-                    {% if member.is_creator %}
-                        <span class="member-role">Creator</span>
-                    {% elif member.is_admin %}
-                        <span class="member-role">Admin</span>
-                    {% endif %}
-
-                </div>
-                
-
-                <button hx-delete="{% url 'delete-group-member' member.id %}"
-                    hx-confirm="Are you sure you want to delete the user? "
-                    hx-target="#member-{{member.id}}"
-                    hx-swap="innerHTML"
-                    class="delete-button-member"
-                >{% if member.user == request.user %}go out{%else%}delete user{% endif%}</button>
-
-
-                 {%if not member.is_creator%}
-                <button hx-post="{% url 'admin-group-member' member.id %}"
-                    hx-target="#notification"
-                    hx-swap="afterbegin"
-                    class="{%if not member.is_admin %}admin-button-member{% else %}no-admin-button-member{%endif%}"
-                    
-                >{%if not  member.is_admin %}make admin{% else %}delete admin{%endif%}</button>
+            <div class="member-info">
+                <a href="{% url 'profile' member.user.username %}">{{ member.user.username }}</a>
+                {% if member.user == request.user %}
+                <span class="member-role member-role--you">You</span>
+                {% endif %}
+                {% if member.is_creator %}
+                <span class="member-role member-role--creator">Creator</span>
+                {% else %}
+                <span class="member-role member-role--admin">Admin</span>
                 {% endif %}
             </div>
+
+            <div class="member-actions">
+                {% if not member.is_creator %}
+                <button type="button"
+                        class="member-btn member-btn--admin js-toggle-admin"
+                        hx-post="{% url 'admin-group-member' member.id %}"
+                        hx-target="#notification"
+                        hx-swap="afterbegin">
+                    <span class="label-off">Make admin</span>
+                    <span class="label-on">Remove admin</span>
+                </button>
+                {% endif %}
+
+                <button type="button"
+                        class="member-btn member-btn--delete js-remove-member"
+                        hx-delete="{% url 'delete-group-member' member.id %}"
+                        hx-confirm="{% if member.user == request.user %}Are you sure you want to leave the group?{% else %}Remove {{ member.user.username }} from the group?{% endif %}"
+                        hx-target="#member-{{ member.id }}"
+                        hx-swap="outerHTML swap:250ms">
+                    {% if member.user == request.user %}Leave{% else %}Remove{% endif %}
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <p class="no-members">No members yet.</p>
         {% endfor %}
     </div>
 
-    <a href="{% url 'group' group.uuid %}" class="back-button">
-        Return to chat
-    </a>
+    <a href="{% url 'group' group.uuid %}" class="back-button">Return to chat</a>
 
 </div>
+
+<script>
+(function () {
+    const isAdminToggle = (el) => el && el.classList && el.classList.contains("js-toggle-admin");
+
+    function flipAdmin(button) {
+        const item = button.closest(".member-item");
+        if (!item) return;
+        item.dataset.admin = item.dataset.admin === "true" ? "false" : "true";
+    }
+
+    // Цвет и подпись меняются сразу после нажатия (и после подтверждения, если оно есть)
+    document.body.addEventListener("htmx:beforeRequest", function (e) {
+        if (isAdminToggle(e.detail.elt)) flipAdmin(e.detail.elt);
+    });
+
+    document.body.addEventListener("htmx:afterRequest", function (e) {
+        const el = e.detail.elt;
+        if (!el) return;
+
+        // Сервер ответил ошибкой или нет сети: возвращаем кнопку в прежнее состояние
+        if (isAdminToggle(el) && !e.detail.successful) flipAdmin(el);
+
+        // Участник удалён: уменьшаем счётчик
+        if (el.classList.contains("js-remove-member") && e.detail.successful) {
+            const counter = document.getElementById("members-count");
+            if (counter) {
+                counter.textContent = Math.max(0, (parseInt(counter.textContent, 10) || 0) - 1);
+            }
+        }
+    });
+})();
+</script>
 
 {% endblock %}

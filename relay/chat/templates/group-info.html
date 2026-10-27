@@ -5,72 +5,65 @@
 <link rel="stylesheet" href="{% static 'css/group-info.css' %}">
 {% endblock %}
 
-{% block title %}{{object.name}}{% endblock%}
+{% block title %}{{ group.name }}{% endblock %}
 
 {% block content %}
 
-<div class="group-info-card" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<div class="group-info-card">
 
-    {% if object.avatar %}
-    <img
-    src="{{ object.avatar.url }}"
-    alt="Avatar"
-    class="profile-avatar-preview"
-    >
-    {% endif %}
-    <div class="group-header">
+    <div class="group-avatar">
+        {% if group.avatar %}
+        <img src="{{ group.avatar.url }}" alt="" class="profile-avatar-preview">
+        {% else %}
+        <div class="group-avatar-placeholder" aria-hidden="true">{{ group.name|slice:":1"|upper }}</div>
+        {% endif %}
+    </div>
+
+    <header class="group-head group-head--center">
         <h2>{{ group.name }}</h2>
         <span class="group-type">{{ group.get_type_display }}</span>
-        
-    </div>
-    <span>Created: {{ group.timestamp }}</span>
+        <p class="group-meta">Created {{ group.timestamp|date:"d.m.Y" }}</p>
+    </header>
 
     <div class="members-header">
         <h3>Members</h3>
-        <span>{{ group.members.count }}</span>
+        <span class="members-count">{{ members_info|length }}</span>
     </div>
 
     <div class="members-list">
         {% for member in members_info %}
-            <div class="member-item" id="member-{{member.id}}">
+        <div class="member-item"
+             id="member-{{ member.id }}"
+             data-admin="{% if member.is_admin %}true{% else %}false{% endif %}">
 
-                <div class="member-avatar">
-                 
-                    <img
-                    src="{{ member.user.get_avatar_url }}"
-                    alt="Avatar"
-                    class="profile-avatar-preview"
-                    >
-                </div>
-
-                <div class="member-info">
-                    <a href="{% url 'profile' member.user.username %}">
-                        {{ member.user.username }}
-                    </a>
-                    {% if member.user == request.user %}
-                        <span class="member-role">You</span>
-                    {% endif %}
-                    {% if member.is_creator %}
-                        <span class="member-role">Creator</span>
-                    {% elif member.is_admin %}
-                        <span class="member-role">Admin</span>
-                    {% endif %}
-
-                </div>
-            
+            <div class="member-avatar">
+                <img src="{{ member.user.get_avatar_url }}" alt="" loading="lazy">
             </div>
+
+            <div class="member-info">
+                <a href="{% url 'profile' member.user.username %}">{{ member.user.username }}</a>
+                {% if member.user == request.user %}
+                <span class="member-role member-role--you">You</span>
+                {% endif %}
+                {% if member.is_creator %}
+                <span class="member-role member-role--creator">Creator</span>
+                {% else %}
+                <span class="member-role member-role--admin">Admin</span>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="no-members">No members yet.</p>
         {% endfor %}
     </div>
 
-    {% if current_groupmember.is_admin or current_groupmember.is_creator %}
-    <a href="{% url 'group-edit' group.uuid %}" class="back-button">
-        Edit group
-    </a>
-    {% endif %}
+    <div class="group-actions">
+        <a href="{% url 'group' group.uuid %}" class="back-button">Return to chat</a>
 
-    <a href="{% url 'group' group.uuid %}" class="back-button">
-        Return to chat
-    </a>
+        {% if current_groupmember.is_admin or current_groupmember.is_creator %}
+        <a href="{% url 'group-edit' group.uuid %}" class="back-button back-button--secondary">Edit group</a>
+        {% endif %}
+    </div>
 
 </div>
 

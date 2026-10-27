@@ -1,3 +1,13 @@
+source venv/bin/activate 
+cd relay
+python manage.py runserver  
 
+source venv/bin/activate 
+cd relay
 redis-server
 celery -A relay worker --loglevel=info
+celery -A relay flower
+
+
+source venv/bin/activate 
+cd relay

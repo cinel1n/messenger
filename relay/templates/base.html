@@ -3,85 +3,88 @@
 <head>
     {% load static %}
     <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content"/>
     <title>{% block title %}{% endblock %}</title>
-    <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-    />
-    <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap"/>
     <link rel="stylesheet" href="{% static 'css/mdb.min.css' %}"/>
     <link rel="stylesheet" href="{% static 'css/general.css' %}"/>
-    {% block style %}
-    {% endblock %}
-    
+
+
+    {% block style %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-  <div class="container-fluid div-nav">
-    <a class="navbar-brand" href="/">RELAY</a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Переключатель навигации">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid div-nav">
+        <a class="navbar-brand" href="/">RELAY</a>
 
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="/">Home</a>
-        </li>
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-        {% if not request.user.is_anonymous %}
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="{% url 'create_group' %}">Create group</a>
-        </li>
-        
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="{% url 'profile' request.user.username %}">{{ request.user.first_name }}</a>
-        </li>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link{% if request.path == '/' %} active{% endif %}"
+                       {% if request.path == '/' %}aria-current="page"{% endif %}
+                       href="/">Home</a>
+                </li>
 
-        {% endif %}
-      </ul>
-      <form class="d-flex" role="search"
-        action="{% url 'search' %}">
-            <div class="input-group">
-            <span class="input-group-text" id="basic-addon1">@</span>
-                <input  type="text" name="search_user" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" autocomplete="off">
-            </div>
-      </form>
-    </div>
-  </div>
+                {% if request.user.is_authenticated %}
+                {% url 'create_group' as create_group_url %}
+                {% url 'profile' request.user.username as profile_url %}
+                <li class="nav-item">
+                    <a class="nav-link{% if request.path == create_group_url %} active{% endif %}"
+                       {% if request.path == create_group_url %}aria-current="page"{% endif %}
+                       href="{{ create_group_url }}">Create group</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{% if request.path == profile_url %} active{% endif %}"
+                       {% if request.path == profile_url %}aria-current="page"{% endif %}
+                       href="{{ profile_url }}">{{ request.user.first_name|default:request.user.username }}</a>
+                </li>
+                {% endif %}
+            </ul>
 
-</nav>
-    </div>
-  </div>
-  </nav>
-
-  {% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-danger search-message">
-            {{ message }}
+            <form class="d-flex search-form" role="search" action="{% url 'search' %}">
+                <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1">@</span>
+                    <input type="text" name="search_user" class="form-control"
+                           placeholder="Username" aria-label="Username"
+                           aria-describedby="basic-addon1" autocomplete="off">
+                </div>
+                {# Выпадающие результаты поиска: раскомментируйте, если нужны. Сейчас блок нигде не выводился #}
+                {# {% block search_user %}{% endblock %} #}
+            </form>
         </div>
+    </div>
+</nav>
 
+{% if messages %}
+<div class="flash-messages" aria-live="polite">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.level_tag == 'error' %}danger{% else %}{{ message.level_tag|default:'info' }}{% endif %} search-message" role="alert">
+        {{ message }}
+    </div>
     {% endfor %}
+</div>
 {% endif %}
 
-    {% block content %}
-    {% endblock%}
+<main class="app-main">
+    {% block content %}{% endblock %}
+</main>
+
 <script type="text/javascript" src="{% static 'js/mdb.umd.min.js' %}"></script>
-<script type="text/javascript"></script>
-<script src="https://unpkg.com/htmx.org@2.0.7"></script>
+<script type="text/javascript" src="{% static 'js/htmx.min.js' %}"></script>
+
 <script>
     setTimeout(() => {
-        document.querySelectorAll('.search-message').forEach(message => {
-            message.remove();
-        });
-    }, 1500);
+        document.querySelectorAll('.flash-messages').forEach(box => box.remove());
+    }, 4000);
 </script>
 </body>
-
 </html>
