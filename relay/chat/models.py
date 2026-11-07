@@ -7,6 +7,8 @@ from django.urls import reverse
 from relay.settings import DEFAULT_AVATAR
 from django.templatetags.static import static
 from django.db import transaction
+from django.core.validators import FileExtensionValidator
+import os
 
 
 User = get_user_model()
@@ -100,6 +102,35 @@ class GroupMemberModel(models.Model):
         self.delete()
 
 
+def attechment_path(instance, filename):
+    ext = os.path.splitext(filename)[1].lower() # расширение нашего файла 
+    return f"chat/{instance.group.id}/{uuid4().hex}{ext}"
+
+
+class AttachmentsModel(models.Model):
+    class Kind(models.TextChoices):
+        IMAGE = "image"
+        FILE = "file"
+
+    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
+    message = models.ForeignKey("Message", on_delete=models.CASCADE, null=True)
+    file = models.FileField(upload_to=attechment_path,
+    #  validators=[FileExtensionValidator(["jpg", "jpeg", "png", "webp", "gif", "pdf"])]
+     )
+    original_name = models.CharField(max_length=250)
+    kind = models.CharField(choices=Kind)
+    size = models.BigIntegerField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def type_content(self):
+        return "attachment"
+        
+    class Meta:
+        indexes = [
+            models.Index(fields=["group", "-timestamp"], name="atm_group_ts_idx"),
+        ]
+
 class Message(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -117,6 +148,8 @@ class Message(models.Model):
         indexes = [
             models.Index(fields=["group", "-timestamp"], name="msg_group_ts_idx"),
         ]
+
+
 
 
 class Event(models.Model):

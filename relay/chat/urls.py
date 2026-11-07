@@ -23,5 +23,7 @@ urlpatterns = [
     path("group/edit/<str:uuid>",  GroupEditView.as_view(), name="group-edit"),
     path("api/", include(router.urls)),
     path("chat-history/<uuid:uuid>", old_message, name="chat-history"), 
+    path("groups/<uuid:uuid>/file/upload", file_upload, name="file-upload"),
+    path("attachments/download/<int:pk>", attachments_download, name="attachments-download")
     # path("group/add-member/<str:uuid>",  GroupEditView.as_view(), name="group-edit"),
 ]

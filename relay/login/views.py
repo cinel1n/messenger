@@ -95,11 +95,17 @@ class ProfileEditView(UpdateView):
     def form_valid(self, form):
         user = self.request.user
         new_email = form.cleaned_data["email"] 
-        # form.unstanse и self.request.user refer to the same object, form.initial stores the old value of the form 
+        # form.instanse и self.request.user refer to the same object, form.initial stores the old value of the form 
         old_email = form.initial.get("email")
+        new_avatar = form.cleaned_data["avatar"]
 
-        if old_email != new_email: # if new email
+        if new_avatar:
+            form.instance.avatar = compress_image(new_avatar)
+
+        if old_email != new_email: 
+            
             users_email = User.objects.filter(email__iexact=new_email, is_email=True)
+            print(users_email)
             if users_email.exists(): 
                 form.add_error("email", "This email is already in use.")
                 return super().form_invalid(form)

@@ -5,7 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, TemplateView, FormView, DeleteView, DetailView, UpdateView
-from .models import Group, User, GroupMemberModel, Event, Message
+from .models import Group, User, GroupMemberModel, Event, Message, AttachmentsModel
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -14,6 +14,7 @@ from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Count
 from rest_framework import viewsets
+from django.http import FileResponse
 from channels.layers import get_channel_layer
 from django.core.exceptions import BadRequest
 from asgiref.sync import async_to_sync
@@ -30,6 +31,11 @@ from django.db.models import Q
 from django.db.models import Prefetch
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import Coalesce
+import os
+from PIL import Image
+from relay.settings import BASE_DIR
+from django.views.decorators.http import require_POST
+
 
 
 class HomeView(LoginRequiredMixin, ListView):
@@ -111,17 +117,20 @@ def chat_data(request, uuid):
     before = request.GET.get("before")
     before_data = None 
 
+    attachments = AttachmentsModel.objects.filter(
+        message=OuterRef("pk")
+    )
 
     messages = Message.objects.filter(
         group=group
+    ).prefetch_related(
+        "attachmentsmodel_set"
     ).select_related(
         "author"
     )
-
     events = Event.objects.filter(
         group=group
     )
-
     max_message = LIMIT_MESSAGE
     
     if before:
@@ -144,7 +153,7 @@ def chat_data(request, uuid):
     # сортировка по дате и id 
     messages = messages.order_by("-timestamp", "-id")[:max_message]
     events = events.order_by("-timestamp", "-id")[:max_message]
-    
+
     message_and_event_list = [*messages, *events]
     # элементы расположены от старшего к младшему, вычесление индекса, с которого можно брать элементы
     len_item = len(message_and_event_list) 
@@ -157,35 +166,49 @@ def chat_data(request, uuid):
 @login_required
 def old_message(request, uuid):
     items = chat_data(request=request, uuid=uuid)
+    data = []
+    for item in items[::-1]:
+        if item.type_content() == "message":
+            data.append(
+                {
+                    "id": item.id,
+                    "type": item.type_content(),
+                    "timestamp": item.timestamp.isoformat(),
+                    "content": item.content,
+                    "author": item.author.username,
+                    "avatar": item.author.get_avatar_url(), 
+                    "attachments" :
+                        [   
+                            {
+                                "id": att.id,
+                                "url": att.file.url, 
+                                "name": att.original_name,
+                                "kind": att.kind
+                            }
+                            for att in item.attachmentsmodel_set.all()
+                        ] 
+                }
+            ), 
+        elif item.type_content() == "event":
+            data.append(
+                {
+                    "id": item.id,
+                    "type": item.type_content(),
+                    "timestamp": item.timestamp.isoformat(),
+                    "content": item.description,    
+                }
+            ), 
+        else:
+            return HttpResponse({"error":"unknown data type"},  400)
+
     return JsonResponse({
-        "messages": [
-            {
-                "id": item.id,
-                "type": item.type_content(),
-                "timestamp": item.timestamp.isoformat(),
-
-                "content": (
-                    item.content
-                    if item.type_content() == "message"
-                    else item.description
-                ),
-
-                "author": (
-                    item.author.username
-                    if item.type_content() == "message"
-                    else None
-                ),
-                "avatar": item.author.get_avatar_url() if item.type_content() == "message" else None, 
-            }
-            for item in items[::-1]
-        ], 
+        "messages": data, 
         "next_cursor": (
             items[0].timestamp.isoformat()
             if items
             else None
         ),   
-    }
-    )
+    })
 
 
 class ChatView(HomeView):
@@ -389,6 +412,8 @@ class DeleteChatView(DeleteView):
         return HttpResponseForbidden()
 
 
+@login_required
+@transaction.atomic
 def start_chat_view(request, username):
     user = get_object_or_404(User, username=username)
     group = Group.objects.filter(members=user).filter(members=request.user).filter(type=Group.GroupType.PRIVATE).first()
@@ -405,6 +430,116 @@ def start_chat_view(request, username):
 
     return redirect(url)
 
+
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+OOXML = "application/vnd.openxmlformats-officedocument."
+
+OLE2 = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"          # контейнер старых .doc/.xls/.ppt
+FILE_TYPES = {                    
+    ".pdf":  ("application/pdf", (0, (b"%PDF-",))),
+    ".txt":  ("text/plain", None),
+    ".docx": (OOXML + "wordprocessingml.document", (0, (b"PK\x03\x04",))),
+    ".xlsx": (OOXML + "spreadsheetml.sheet", (0, (b"PK\x03\x04",))),
+    ".pptx": (OOXML + "presentationml.presentation", (0, (b"PK\x03\x04",))),
+    ".zip":  ("application/zip", (0, (b"PK\x03\x04",))),
+    ".doc":  ("application/msword", (0, (OLE2,))),
+    ".xls":  ("application/vnd.ms-excel", (0, (OLE2,))),
+    ".ppt":  ("application/vnd.ms-powerpoint", (0, (OLE2,))),
+    ".rtf":  ("application/rtf", (0, (b"{\\rtf",))),
+    ".rar":  ("application/vnd.rar", (0, (b"Rar!\x1a\x07",))),
+    ".7z":   ("application/x-7z-compressed", (0, (b"7z\xbc\xaf\x27\x1c",))),
+    ".mp3":  ("audio/mpeg", (0, (b"ID3", b"\xff\xfb", b"\xff\xfa", b"\xff\xf3", b"\xff\xf2"))),
+    ".ogg":  ("audio/ogg", (0, (b"OggS",))),
+    ".mp4":  ("video/mp4", (4, (b"ftyp",))),
+    ".m4a":  ("audio/mp4", (4, (b"ftyp",))),
+    ".mov":  ("video/quicktime", (4, (b"ftyp", b"moov", b"wide", b"mdat"))),
+}
+
+
+def validate_file(file):
+    from relay.settings import MAX_IMAGE_BYTES, MAX_FILE_BYTES
+
+    name, ext = [os.path.splitext(file.name)[i] for i in range(2)]
+    ext = ext.lower()
+    if ext in IMAGE_EXTS:
+        if file.size > MAX_IMAGE_BYTES:
+            raise ValidationError(f"file is too large (max {MAX_IMAGE_BYTES/(1024**2)} mb)")
+        
+        try: # используем Pillow 
+            with Image.open(file) as img:
+                img.verify()
+                if "." + img.format.lower() not in IMAGE_EXTS: # открывает файл и проверяет содержимое на разрешение 
+                    raise ValidationError("Unsupported image format", code="unsupported")
+
+        except Exception:
+            raise ValidationError("The file is corrupted or is not an image")
+
+        finally:
+            file.seek(0) # восстанавливается указатель файла
+
+        return True
+
+    elif ext in FILE_TYPES:
+        if file.size > MAX_FILE_BYTES:
+            raise ValidationError(f"file is too large (max {MAX_FILE_BYTES/(1024**2)} mb)")
+
+        content_type, offset_magic = FILE_TYPES[ext]
+        head = file.read(1024) 
+        file.seek(0)
+        if offset_magic:
+            offset, magic_bytes = offset_magic
+
+            if not head.startswith(magic_bytes, offset): # есть ли магические байти и совпадают ли они с должными магическими байтами  
+                raise ValidationError("File content does not match its extension")
+
+        elif ext == ".txt" and b"\x00" in head:
+            raise ValidationError("File content does not match its extension")
+
+        return True
+    else:
+        raise ValidationError("invalid file extension")
+
+
+@require_POST
+def file_upload(request, uuid):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
+    group = get_object_or_404(Group, uuid=uuid, members=request.user)
+    file = request.FILES.get("file")
+
+    if file is None:
+        return JsonResponse({"error": "file is None"}, status=400)
+    
+    name, ext = [os.path.splitext(file.name)[i] for i in range(2)]
+    ext = ext.lower()
+
+    try:
+        vf = validate_file(file)
+    except ValidationError as error:
+        return JsonResponse({"error": error.message}, status=error.code)
+
+    org_name = file.name.strip()[:240]
+    with transaction.atomic():
+        attachment = AttachmentsModel.objects.create(
+            file=file, 
+            original_name=org_name, 
+            kind=AttachmentsModel.Kind.IMAGE if ext in IMAGE_EXTS else AttachmentsModel.Kind.FILE,
+            size=file.size,
+            group=group, 
+            author=request.user
+        )
+        
+    return JsonResponse({
+        "pk_attachment" : attachment.id
+    })
+
+
+def attachments_download(request, pk):
+    att = get_object_or_404(AttachmentsModel, pk=pk, group__members=request.user)
+    file = att.file.open("rb")
+    
+    return FileResponse(file, as_attachment=True, filename=att.original_name)
 
 class CreateGroupView(FormView):
     model = Group

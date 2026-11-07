@@ -293,19 +293,7 @@ body:has(.messenger) {
     height: 34px;
 }
 
-.mes-1 > p {
-    min-width: 0;
-    margin: 0;
-    padding: 8px 12px;
 
-    color: var(--text);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px 14px 14px 4px;
-
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;         /* переносы строк из Shift+Enter сохраняются */
-}
 
 .mes-1 > span {
     align-self: flex-end;
@@ -326,14 +314,9 @@ body:has(.messenger) {
     display: none;
 }
 
-.mes-me > p {
-    background: var(--brand-soft);
-    border-color: transparent;
-    border-radius: 14px 14px 4px 14px;
-}
 
-/* порядок при row-reverse (справа налево): пузырь, время, корзина */
-.mes-me > p { order: 0; }
+
+
 .mes-me > span { order: 1; }
 .mes-me > .delete-message-btn { order: 2; }
 
@@ -351,6 +334,85 @@ body:has(.messenger) {
     border: 0;
     font-size: 0.85rem;
     text-align: center;
+}
+
+
+/* ==========================================================
+   Пузырь сообщения: внутри картинки и/или подпись
+   ========================================================== */
+.mes-bubble {
+    min-width: 0;
+    padding: 8px 12px;
+
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px 14px 14px 4px;
+    overflow: hidden;
+}
+
+.mes-bubble > p {
+    margin: 0;
+    overflow-wrap: anywhere;
+    text-align: start;
+    white-space: pre-wrap;
+}
+
+/* Свои сообщения */
+.mes-me > .mes-bubble {
+    background: var(--brand-soft);
+    border-color: transparent;
+    border-radius: 14px 14px 4px 14px;
+    order: 0;
+}
+
+.mes-me > span { order: 1; }
+.mes-me > .delete-message-btn { order: 2; }
+
+/* Системные события: строка из одного <p> без пузыря и аватара */
+.mes-1 > p {
+    margin: 0;
+    padding: 2px 8px;
+
+    color: var(--muted);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+
+/* ==========================================================
+   Вложения-изображения
+   ========================================================== */
+.mes-bubble:has(.mes-attachment) {
+    padding: 4px;                    /* картинка почти вплотную к краю пузыря */
+}
+
+.mes-bubble:has(.mes-attachment) > p {
+    padding: 6px 8px 4px;
+}
+
+.mes-attachment {
+    display: block;
+    border-radius: 10px;
+    line-height: 0;
+    overflow: hidden;
+}
+
+.mes-attachment + .mes-attachment,
+.mes-attachment + p {
+    margin-top: 4px;
+}
+
+.mes-attachment img {
+    display: block;
+    height: auto;
+    max-width: min(320px, 70vw);
+    max-height: 360px;
+
+    object-fit: cover;               /* слишком высокая картинка обрезается, а не растягивается */
+    background: var(--border);       /* серая подложка, пока грузится */
+    cursor: zoom-in;
 }
 
 
@@ -416,16 +478,20 @@ body:has(.messenger) {
     display: none;
 }
 
+/* ==========================================================
+   Поле ввода и вложение
+   ========================================================== */
+.message-form-wrap {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+
 .message-form {
     display: flex;
     align-items: flex-end;
     gap: 8px;
-
-    flex-shrink: 0;
     padding: 10px 12px;
-
-    background: var(--surface);
-    border-top: 1px solid var(--border);
 }
 
 .message-form textarea {
@@ -433,10 +499,10 @@ body:has(.messenger) {
     min-height: 44px;
     max-height: 8rem;
 
-    font-size: 1rem;               /* 16px: iOS не приближает страницу при фокусе */
+    font-size: 1rem;                 /* 16px: iOS не приближает страницу при фокусе */
     border-radius: 12px;
     resize: none;
-    field-sizing: content;         /* поле растёт по мере набора, где поддерживается */
+    field-sizing: content;
 }
 
 .message-form .btn {
@@ -445,6 +511,158 @@ body:has(.messenger) {
     border-radius: 12px;
 }
 
+/* Кнопка-скрепка (label для скрытого input) */
+.attach-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+
+    color: var(--muted);
+    background: var(--page-bg);
+    border-radius: 12px;
+
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.attach-btn:hover,
+.attach-btn.has-file {
+    color: var(--brand);
+    background: var(--brand-soft);
+}
+
+#file-input:focus-visible + .attach-btn {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* Строка предпросмотра выбранного файла */
+.file-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin: 10px 12px 0;
+    padding: 6px 8px;
+
+    background: var(--page-bg);
+    border-radius: 12px;
+}
+
+.file-preview[hidden],
+.file-preview-thumb[hidden] {
+    display: none;                   /* иначе display: flex перебивает атрибут hidden */
+}
+
+.file-preview-thumb {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.file-preview-name {
+    flex: 1;
+    min-width: 0;
+
+    overflow: hidden;
+    color: var(--text);
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-preview-remove {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.file-preview-remove:hover {
+    color: var(--danger);
+    background: rgba(194, 21, 21, 0.12);
+}
+/* ==========================================================
+   Вложения-файлы
+   ========================================================== */
+.mes-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    min-width: 200px;
+    max-width: min(320px, 70vw);
+    padding: 6px 8px;
+
+    color: inherit;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 10px;
+    text-decoration: none;
+
+    transition: background-color 0.15s ease;
+}
+
+.mes-file:hover {
+    color: inherit;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.mes-file-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+
+    color: #fff;
+    background: var(--brand);
+    border-radius: 10px;
+
+    font-size: 1.1rem;
+}
+
+.mes-file-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mes-file-name {
+    overflow: hidden;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mes-file-size {
+    color: var(--muted);
+    font-size: 0.75rem;
+}
+
+.mes-file + p,
+.mes-file + .mes-file {
+    margin-top: 6px;
+}
 
 /* ==========================================================
    Чат не выбран
@@ -466,9 +684,7 @@ body:has(.messenger) {
 }
 
 
-/* ==========================================================
-   Адаптивность
-   ========================================================== */
+
 
 @media (max-width: 767.98px) {
     .messenger {

@@ -9,7 +9,6 @@
 
 {% block content %}
 
-{# Иконка корзины объявляется один раз и подключается через <use> #}
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
   <symbol id="icon-trash" viewBox="0 0 16 16" fill="currentColor">
     <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
@@ -67,23 +66,41 @@
       {% for mess in messages_event %}
         {% if mess.type_content == "message" %}
         <div class="mes-1{% if mess.author == user %} mes-me{% endif %}" data-id="{{ mess.id }}">
-          <img class="avatar-user" src="{{ mess.author.get_avatar_url }}" alt="">
-          <p class="text-start text-break" id="mess-content-{{ mess.id }}">{{ mess.content }}</p>
-          {% if mess.author == user %}
-          <a class="delete-message-btn" role="button" tabindex="0" aria-label="Delete message"
-             hx-delete="{% url 'delete-message' mess.id %}"
-             hx-confirm="Are you sure you want to delete this message?"
-             hx-target="#mess-content-{{ mess.id }}"
-             hx-swap="innerHTML">
-            <svg width="16" height="16" aria-hidden="true"><use href="#icon-trash"/></svg>
-          </a>
-          {% endif %}
-          <span>{{ mess.timestamp|date:"H:i" }}</span>
+        <img class="avatar-user" src="{{ mess.author.get_avatar_url }}" alt="">
+            
+        <div class="mes-bubble">
+            {% for att in mess.attachmentsmodel_set.all %}
+            
+            {% if att.kind == "image" %}
+            <a class="mes-attachment" href="{{ att.file.url }}" target="_blank" rel="noopener">
+                <img src="{{ att.file.url }}" alt="{{ att.original_name }}" loading="lazy"{% if att.width %} width="{{ att.width }}" height="{{ att.height }}"{% endif %}>
+            </a>
+            {% else %}
+            <a class="mes-file" href="{% url 'attachments-download' att.id %}">
+            <span class="mes-file-icon"><i class="fa-solid fa-file" aria-hidden="true"></i></span>
+            <span class="mes-file-info">
+                <span class="mes-file-name">{{ att.original_name }}</span>
+                <span class="mes-file-size">{{ att.size|filesizeformat }}</span>
+            </span>
+            </a>
+
+            {% endif %}
+
+
+            {% endfor %}
+            {% if mess.content %}<p class="text-start text-break">{{ mess.content }}</p>{% endif %}
         </div>
-        {% elif mess.type_content == "event" %}
-        <div class="mes-1">
-          <p class="text-start text-break">{{ mess.description }}</p>
-          <span>{{ mess.timestamp|date:"H:i" }}</span>
+
+        {% if mess.author == user %}
+        <a class="delete-message-btn" role="button" tabindex="0" aria-label="Delete message"
+            hx-delete="{% url 'delete-message' mess.id %}"
+            hx-confirm="Are you sure you want to delete this message?"
+            hx-target="closest .mes-1"
+            hx-swap="outerHTML">
+            <svg width="16" height="16" aria-hidden="true"><use href="#icon-trash"/></svg>
+        </a>
+        {% endif %}
+        <span>{{ mess.timestamp|date:"H:i" }}</span>
         </div>
         {% endif %}
       {% endfor %}
@@ -91,9 +108,25 @@
 
     <div id="ws-error" class="ws-error" role="alert"></div>
 
+    <div class="message-form-wrap">
+
+    <div class="file-preview" id="file-preview" hidden>
+        <img class="file-preview-thumb" id="file-preview-thumb" alt="" hidden>
+        <span class="file-preview-name" id="file-preview-name"></span>
+        <button type="button" class="file-preview-remove" id="file-preview-remove" aria-label="Remove file">&times;</button>
+    </div>
+
     <div class="message-form">
-      <textarea class="form-control" id="message-input" rows="1" placeholder="Enter a message..."></textarea>
-      <button class="btn btn-primary" id="send-button" type="button">Send</button>
+        <input id="file-input" class="visually-hidden" type="file">
+
+        <label class="attach-btn" for="file-input" title="Attach image" aria-label="Attach image">
+        <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+        </label>
+
+        <textarea class="form-control" id="message-input" rows="1" placeholder="Enter a message..."></textarea>
+        <button class="btn btn-primary" id="send-button" type="button">Send</button>
+    </div>
+
     </div>
 
     {% else %}
@@ -162,14 +195,19 @@
                 addMessageToChat({
                     type: "message", id: data.message_id, content: data.message,
                     author: data.author, avatar: data.avatar, timestamp: data.timestamp,
+                    attachments: data.attachments, 
                 })
             }
             else {
+                const us = `{{user.username}}`
+                
+                if (data.author !== us){
                 const count_no_read = document.getElementById(`count-no-read-${data.group_uuid}`)
                 
                 if (count_no_read){
                     current = parseInt(count_no_read.textContent) || 0 
                     count_no_read.textContent = current + 1 
+                }
                 }
                 
             }
@@ -194,51 +232,129 @@
         errorDiv.textContent = message
     }
 
-    function createItemElement(item) {
+    function createItemElement(item, onMediaLoad) {
         const div = document.createElement("div")
         div.className = item.author === CURRENT_USER ? "mes-1 mes-me" : "mes-1"
-
-        const text = document.createElement("p")
-        text.className = "text-start text-break"
-
+        div.dataset.id = item.id
+        
         if (item.type === "message") {
             const avatar = document.createElement("img")
             avatar.className = "avatar-user"
             avatar.src = item.avatar
+            avatar.alt = ""
 
-            text.id = `mess-content-${item.id}`      
-            text.textContent = item.content
-            div.append(avatar, text)
+            const bubble = document.createElement("div")
+            bubble.className = "mes-bubble"
+
+            for (const att of item.attachments || []) {
+                
+                if (att.kind === "file"){
+                    
+                    const link = document.createElement("a")
+                    link.className = "mes-file"
+                    link.href = att.url
+
+                    const iconBox = document.createElement("span")
+                    iconBox.className = "mes-file-icon"
+                    const i = document.createElement("i")
+                    i.className = `fa-solid ${att.icon || "fa-file"}`
+                    iconBox.append(i)
+
+                    const info = document.createElement("span")
+                    info.className = "mes-file-info"
+                    const name = document.createElement("span")
+                    name.className = "mes-file-name"
+                    name.textContent = att.name
+                    const size = document.createElement("span")
+                    size.className = "mes-file-size"
+                    size.textContent = formatSize(att.size)
+                    info.append(name, size)
+
+                    link.append(iconBox, info)
+                    bubble.append(link)
+                }
+                if (att.kind == "image"){
+
+                    const link = document.createElement("a")
+                    link.className = "mes-attachment"
+                    link.href = att.url
+                    link.target = "_blank"
+                    link.rel = "noopener"
+                    
+                    const img = document.createElement("img")
+                    
+                    img.src = att.url
+                    img.alt = att.name || ""
+                    img.loading = "lazy"
+                    // if (att.width && att.height) {                        // резервирует место до загрузки
+                        img.width = 500
+                        img.height =200
+                    // }
+                    if (onMediaLoad) img.addEventListener("load", onMediaLoad)
+                    link.append(img)
+                    bubble.append(link)
+                }
+            }
+
+            if (item.content) {
+                const text = document.createElement("p")
+                text.className = "text-start text-break"
+                text.textContent = item.content
+                bubble.append(text)
+            }
+
+            div.append(avatar, bubble)
 
             if (item.author === CURRENT_USER) {
                 const del = document.createElement("a")
                 del.className = "delete-message-btn"
+                del.setAttribute("role", "button")
+                del.tabIndex = 0
+                del.setAttribute("aria-label", "Delete message")
                 del.setAttribute("hx-delete", `/chat/delete-message/${item.id}/`)
-                del.setAttribute("hx-confirm", `Are you sure you want to delete the message "${item.content}"?`)
-                del.setAttribute("hx-target", `#mess-content-${item.id}`)
-                del.setAttribute("hx-swap", "innerHTML")
+                del.setAttribute("hx-confirm", "Are you sure you want to delete this message?")
+                del.setAttribute("hx-target", "closest .mes-1")
+                del.setAttribute("hx-swap", "outerHTML")
                 del.innerHTML = DELETE_ICON
                 div.append(del)
             }
-        } else {                                      // событие (вошёл / вышел)
+        } else {                                                       // событие (вошёл / вышел)
+            const text = document.createElement("p")
+            text.className = "text-start text-break"
             text.textContent = item.content
             div.append(text)
         }
 
         const time = document.createElement("span")
-        time.textContent = new Date(item.timestamp).toLocaleTimeString([], {
-            hour: "2-digit", minute: "2-digit",
-        })
+        const d = new Date(item.timestamp)
+        time.textContent = isNaN(d) ? "" : d.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})
         div.append(time)
         return div
+    }
+    function formatSize(bytes) {
+        if (!bytes) return ""
+        const units = ["B", "KB", "MB", "GB"]
+        let i = 0
+        while (bytes >= 1024 && i < units.length - 1) {
+            bytes /= 1024
+            i++
+        }
+        return `${bytes.toFixed(i ? 1 : 0)} ${units[i]}`
     }
     function addMessageToChat(item) {
         const box = document.querySelector(".chat-mess")
         if (!box) return
-        const el = createItemElement(item)
+
+        // Прокручиваем вниз, если пользователь и так внизу или это его собственное сообщение
+        const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 150
+        const stick = item.author === CURRENT_USER || nearBottom
+
+        const el = createItemElement(item, () => {                    // картинка догрузилась: высота выросла
+            if (stick) box.scrollTop = box.scrollHeight
+        })
         box.append(el)
-        htmx.process(el)                              // см. ниже
-        box.scrollTop = box.scrollHeight
+        htmx.process(el)
+        if (stick) box.scrollTop = box.scrollHeight
     }
 
     // Функция обновления последнего сообщения в списке
@@ -266,6 +382,51 @@
         if (current_chat_uuid && chatWebSocket) {
             const messageInput = document.getElementById('message-input')
             const sendButton = document.getElementById('send-button')
+            const fileInput = document.getElementById("file-input")
+
+            const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+
+            const preview = document.getElementById("file-preview")
+            const previewThumb = document.getElementById("file-preview-thumb")
+            const previewName = document.getElementById("file-preview-name")
+            const previewRemove = document.getElementById("file-preview-remove")
+            const attachBtn = document.querySelector(".attach-btn")
+            let previewUrl = null
+
+            function clearAttachment() {
+                fileInput.value = ""
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl)          // освобождаем память от временной ссылки
+                    previewUrl = null
+                }
+                previewThumb.removeAttribute("src")
+                previewThumb.hidden = true
+                preview.hidden = true
+                attachBtn.classList.remove("has-file")
+            }
+
+            fileInput.addEventListener("change", () => {
+                const file = fileInput.files[0]
+                if (!file) {
+                    clearAttachment()
+                    return
+                }
+                if (file.size > MAX_UPLOAD_BYTES) {           // быстрая проверка, окончательную делает сервер
+                    showError("File is too large")
+                    clearAttachment()
+                    return
+                }
+
+                if (previewUrl) URL.revokeObjectURL(previewUrl)
+                previewUrl = URL.createObjectURL(file)
+                previewThumb.src = previewUrl
+                previewThumb.hidden = false
+                previewName.textContent = file.name
+                preview.hidden = false
+                attachBtn.classList.add("has-file")
+            })
+
+            previewRemove.addEventListener("click", clearAttachment)
 
             if (messageInput && sendButton) {
                 // Автофокус
@@ -285,20 +446,37 @@
                     }
                 })
 
-                function sendMessage() {
-                    const content = messageInput.value.trim()
-                    if (!content) {
+                async function sendMessage() {
+                    const content = messageInput.value.trim();
+                    const fileContent = fileInput.files[0];
+                    
+
+                    if (!content && !fileContent) {
                         alert('enter a message!')
                         return
                     }
 
                     if (chatWebSocket.readyState === WebSocket.OPEN) {
+                        let pk_attachment = 0
+
+                        if (fileContent){
+                            try {
+                                const data_file = await uploadFile(fileContent, current_chat_uuid) ;  
+                                pk_attachment = data_file.pk_attachment;
+                            }
+                            catch (error) {
+                                return showError(data_file.error.message)
+                                return showError("Error file: incorect file extension, file is None or file too large")
+;
+                            }
+                        }   
+                        
 
                         chatWebSocket.send(JSON.stringify({
                             'type': "text_message",
-                            'status':'read',
                             'group_uuid': current_chat_uuid, 
-                            'message': content
+                            'message': content,
+                            "pk_attachment": pk_attachment,
                         }))
 
                         messageInput.value = ''
@@ -308,8 +486,32 @@
                         alert('No connected with server!')
                     }
                 }
+                async function uploadFile(fileContent, current_chat_uuid){
+                    
+                    const formData = new FormData();
+                    {% if group_name %}
+                    const url = "{% url 'file-upload' group.uuid %}";
+                    {% endif %}
+                    const CSRF_TOKEN = "{{ csrf_token }}"
+
+                    formData.append('file', fileContent)
+
+                    const response = await fetch(url, 
+                        {
+                        method:"POST", 
+                        body: formData, 
+                        credentials: "include",
+                        headers: {
+                            "X-CSRFToken": CSRF_TOKEN
+                        }
+                        }
+                    )
+                    return response.json();
+
+                }
             }
         }
+
 
         // Автоскролл к последним сообщениям
         const chatMessages = document.querySelector('.chat-mess')
@@ -317,23 +519,21 @@
             chatMessages.scrollTop = chatMessages.scrollHeight
         }
     })
+
+    
     {% if group_name %}
+
     document.addEventListener("DOMContentLoaded", function () {
     
-
-    const button =
-        document.getElementById("load-more-messages");
-
-    const chatMessages =
-        document.querySelector(".chat-mess");
-
+    const button = document.getElementById("load-more-messages");
+    const chatMessages = document.querySelector(".chat-mess");
+        
     if (!button || !chatMessages) {
         return;
     }
 
-    let nextCursor =
-        chatMessages.dataset.nextCursor || null;
-
+    let nextCursor = chatMessages.dataset.nextCursor || null;
+        
     let isLoading = false;
 
 
