@@ -36,8 +36,14 @@
             <span class="type-field">Last Name</span>
         </li>
         {% endif %}
-        <li class="list-group-item profile-item">
-            <span class="field-value">{{ object.is_email }}</span>
+        <li class="list-group-item profile-item" style="margin-top:10px">
+            <span class="field-value">
+                {% if object.is_email %}
+                Почта подтверждена 
+                {% else %}
+                Почта не подтверждена
+                {% endif %}
+            </span>
             <span class="type-field">Confirm email</span>
         </li>
 

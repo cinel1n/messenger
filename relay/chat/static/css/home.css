@@ -725,3 +725,12 @@ body:has(.messenger) {
         font-size: 0.8rem;
     }
 }
+.typing-indicator {
+    flex-shrink: 0;
+    min-height: 1.4rem;              /* место зарезервировано, даже когда пусто */
+    padding: 0 14px;
+
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-style: italic;
+}

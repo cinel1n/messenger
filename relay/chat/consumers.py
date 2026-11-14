@@ -8,13 +8,14 @@ from .models import Event, Message, Group, GroupMemberModel, AttachmentsModel
 from django_ratelimit.decorators import ratelimit
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-
+import time
 
 def data_attachment(att):
-
     if att.kind == AttachmentsModel.Kind.IMAGE:
+        # просмотр 
         url = att.file.url
     else:
+        # скачивание файла 
         url = reverse("attachments-download", args=[att.id, ])
 
     return {
@@ -88,7 +89,32 @@ class GroupConsumer(AsyncWebsocketConsumer):
             uuid=self.group_uuid,
             members=self.user
         )
+        member_ids = [
+            id_member async for id_member in group.members.values_list("id", flat=True)
+        ]
+        
+        if type == "typing":
+            
+            now = time.monotonic()
+            if now - getattr(self, "_last_typing", 0) < 1:            # защита от флуда: не чаще раза в секунду
+                return
 
+            self._last_typing = now
+            payload = {
+                "type": "typing",
+                "group_uuid": self.group_uuid, 
+                "author": author.username
+            }
+            for id_member in member_ids:
+                await self.channel_layer.group_send( 
+                    f"user_{id_member}",
+                    {
+                        "type": "typing_event",
+                        "payload": payload
+                    }
+                )
+
+            return
         # Если событие - пересчет последнего прочитанного сообщения 
         if type == "read":
             try:
@@ -145,9 +171,6 @@ class GroupConsumer(AsyncWebsocketConsumer):
             
 
 
-        member_ids = [
-            id_member async for id_member in group.members.values_list("id", flat=True)
-        ]
         for id_member in member_ids:
             await self.channel_layer.group_send( # попадает в Redis
                 f"user_{id_member}",
@@ -157,6 +180,9 @@ class GroupConsumer(AsyncWebsocketConsumer):
                 }
             )
 
+    async def typing_event(self, event):
+        payload = event.get("payload")
+        await self.send(json.dumps(payload))
 
     async def text_message(self, event):
         payload = event.get("payload")

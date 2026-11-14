@@ -342,6 +342,10 @@ def delete_message_view(request, pk):
         return HttpResponse("You cannot delete this message", 403)
     
     message.delete()
+
+
+    channel_layer = get_channel_layer()
+    
     return HttpResponse("Message was deleted")
 
 @require_http_methods(['DELETE'])
