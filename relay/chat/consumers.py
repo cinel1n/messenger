@@ -168,8 +168,6 @@ class GroupConsumer(AsyncWebsocketConsumer):
             await database_sync_to_async(attachment.save)()
 
             payload["attachments"] = [data_attachment(att=attachment),]
-            
-
 
         for id_member in member_ids:
             await self.channel_layer.group_send( # попадает в Redis
@@ -192,6 +190,9 @@ class GroupConsumer(AsyncWebsocketConsumer):
         payload = event.get("payload")
         await self.send(json.dumps(payload))
 
+    async def delete_message(self, event):
+        await self.send(json.dumps(event))
+        
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             self.user_channel_group,

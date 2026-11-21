@@ -340,11 +340,26 @@ def delete_message_view(request, pk):
     message = get_object_or_404(Message, id=pk)
     if message.author != request.user:
         return HttpResponse("You cannot delete this message", 403)
+
+    group = message.group
+
+    member_ids = [
+        id_member for id_member in group.members.values_list("id", flat=True)
+    ]
+
+    channel_layer = get_channel_layer()
+    for id_user in member_ids:
+        async_to_sync(channel_layer.group_send)(
+            f"user_{id_user}", 
+            {
+                "type": "delete_message", 
+                "gpoup_uuid": str(group.uuid), 
+                "id_message": pk, 
+            }
+        )
     
     message.delete()
 
-
-    channel_layer = get_channel_layer()
     
     return HttpResponse("Message was deleted")
 
