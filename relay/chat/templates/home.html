@@ -64,6 +64,7 @@
     </header>
 
     <div class="chat-mess"
+         data-companion-read="{{ com_last_read_mess_id|default:0 }}"
          data-next-cursor="{{ next_cursor|default:'' }}"
          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
       {% for mess in messages_event %}
@@ -93,8 +94,9 @@
             {% endfor %}
             {% if mess.content %}<p class="text-start text-break">{{ mess.content }}</p>{% endif %}
         </div>
-
+            
         {% if mess.author == user %}
+
         <a class="delete-message-btn" role="button" tabindex="0" aria-label="Delete message"
             hx-delete="{% url 'delete-message' mess.id %}"
             hx-confirm="Are you sure you want to delete this message?"
@@ -103,7 +105,16 @@
             <svg width="16" height="16" aria-hidden="true"><use href="#icon-trash"/></svg>
         </a>
         {% endif %}
-        <span>{{ mess.timestamp|date:"H:i" }}</span>
+        <span>
+        {{ mess.timestamp|date:"H:i" }}
+        {% if group.type == group.GroupType.PRIVATE and mess.author == user %}
+            {% if mess.id > com_last_read_mess_id %}
+            <i class="msg-status fa-solid fa-check" title="Sent" aria-label="Sent"></i>
+            {% else %}
+            <i class="msg-status msg-status--read fa-solid fa-check-double" title="Read" aria-label="Read"></i>
+            {% endif %}
+        {% endif %}
+        </span>
         </div>
         {% endif %}
       {% endfor %}
@@ -187,28 +198,39 @@
             if (data.group_uuid === current_chat_uuid) showTyping(data.author)
             return
         }
-        console.log(9)
+
         if (data.type ==="delete_message"){
-            console.log(10)
-            if (data.gpoup_uuid === current_chat_uuid){
-                console.log(11)
+            if (data.group_uuid === current_chat_uuid){
                 const mess_del = document.getElementById(data.id_message);
-                console.log(mess_del)
                 mess_del.remove();
             }
         }
-
+        if (data.type ==="count_read"){
+            if (data.group_uuid === current_chat_uuid){
+                markReadUpTo(data.id_message_read)
+            }
+        }
 
         if (data.type === "text_message") {
 
             if (data.group_uuid === current_chat_uuid){
                 hideTyping(data.author)
+                // последнее прочитанное нами сообщение 
                 chatWebSocket.send(JSON.stringify({
                     'type': "read",
                     'group_uuid': current_chat_uuid, 
                     'message_id':data.message_id,
 
                 }))
+                // 
+                chatWebSocket.send(JSON.stringify({
+                    'type': "count_read",
+                    'group_uuid': current_chat_uuid, 
+                    'id_message_read':data.message_id,
+                    
+                }))
+
+
 
                 addMessageToChat({
                     type: "message", id: data.message_id, content: data.message,
@@ -241,7 +263,22 @@
         console.log("reason:", e.reason)
         console.log("clean:", e.wasClean)
     }
+    let companionReadId = Number(document.querySelector(".chat-mess")?.dataset.companionRead) || 0
 
+    function markReadUpTo(messageId) {
+        if (!messageId) return                                    // None на сервере превращается в null
+        companionReadId = Math.max(companionReadId, messageId)    // запоминаем для новых сообщений
+
+        document.querySelectorAll(".mes-me .msg-status:not(.msg-status--read)").forEach(icon => {
+            const row = icon.closest(".mes-1")
+            if (Number(row.id) <= messageId) {
+                icon.classList.add("msg-status--read")
+                icon.classList.replace("fa-check", "fa-check-double")
+                icon.title = "Read"
+                icon.setAttribute("aria-label", "Read")
+            }
+        })
+    }
     function showError(message) {
         const errorDiv = document.querySelector('#ws-error')
 
@@ -279,7 +316,10 @@
         div.className = item.author === CURRENT_USER ? "mes-1 mes-me" : "mes-1"
         div.id = item.id
         
+        
         if (item.type === "message") {
+            const read = item.id <= companionReadId
+
             const avatar = document.createElement("img")
             avatar.className = "avatar-user"
             avatar.src = item.avatar
@@ -368,10 +408,27 @@
         }
 
         const time = document.createElement("span")
+
         const d = new Date(item.timestamp)
-        time.textContent = isNaN(d) ? "" : d.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})
+        time.append(isNaN(d) ? "" : d.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}))
+
+        // Галочки только у своих сообщений в личном чате (не у чужих и не у событий)
+        // const isPrivate = document.querySelector(".chat-mess")?.dataset.private === "true"
+        
+        if (item.type === "message" && item.author === CURRENT_USER) {
+            const read = item.id <= companionReadId
+
+            const icon = document.createElement("i")
+            icon.className = `msg-status fa-solid ${read ? "msg-status--read fa-check-double" : "fa-check"}`
+            icon.title = read ? "Read" : "Sent"
+            icon.setAttribute("aria-label", icon.title)
+
+            time.append(" ", icon)          // сначала время, потом галочка: как в серверном шаблоне
+        }
+
         div.append(time)
         return div
+    
     }
     function formatSize(bytes) {
         if (!bytes) return ""
@@ -421,8 +478,6 @@
     
 
     document.addEventListener('DOMContentLoaded', function() {
-
-        
         // Отправка сообщений (только если есть открытый чат)
         if (current_chat_uuid && chatWebSocket) {
             const messageInput = document.getElementById('message-input')
@@ -585,9 +640,6 @@
     
     {% if group_name %}
 
-
-
-
     document.addEventListener("DOMContentLoaded", function () {
     
     const button = document.getElementById("load-more-messages");
@@ -598,31 +650,23 @@
     }
 
     let nextCursor = chatMessages.dataset.nextCursor || null;
-        
     let isLoading = false;
-    
-
 
     button.addEventListener("click", async function () {
 
         if (isLoading || !nextCursor) {
             return;
         }
-
+        
         isLoading = true;
         button.disabled = true;
 
         const oldScrollHeight = chatMessages.scrollHeight;
-
         const oldScrollTop = chatMessages.scrollTop;
 
-
         try {
-            const url =
-                "{% url 'chat-history' group.uuid %}" +
-                "?before=" +
-                encodeURIComponent(nextCursor);
-
+            const url = "{% url 'chat-history' group.uuid %}" + "?before=" + encodeURIComponent(nextCursor);
+                
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -640,24 +684,15 @@
             }
 
             const newScrollHeight = chatMessages.scrollHeight;
+
+            chatMessages.scrollTop = oldScrollTop +(newScrollHeight - oldScrollHeight);
                 
-
-            chatMessages.scrollTop =
-                oldScrollTop +
-                (newScrollHeight - oldScrollHeight);
-
-
-            /*
-             * Получаем cursor для следующей загрузки
-             */
             nextCursor = data.next_cursor || null;
                 
             chatMessages.dataset.nextCursor =nextCursor || "";
                 
             if (!nextCursor) {
-                button.textContent =
-                    "All messages have been loaded.";
-
+                button.textContent = "All messages have been loaded.";
                 button.disabled = true;
             }
 

@@ -94,7 +94,6 @@ class GroupConsumer(AsyncWebsocketConsumer):
         ]
         
         if type == "typing":
-            
             now = time.monotonic()
             if now - getattr(self, "_last_typing", 0) < 1:            # защита от флуда: не чаще раза в секунду
                 return
@@ -130,6 +129,27 @@ class GroupConsumer(AsyncWebsocketConsumer):
                 await self.count_read_messages(group, id_message) 
             
             return 
+        
+        if type == "count_read" and group.type == group.GroupType.PRIVATE:
+            id_message_read = int(text_data.get("id_message_read", None))
+            
+            companion = [i for i in member_ids if i != self.user.id][0]
+
+            payload = {
+                "type": "count_read", 
+                "group_uuid": str(group.uuid), 
+                "id_message_read":id_message_read, 
+            }
+            # отправка нашему собеседнику событие, что мы прочитали сообщение 
+            await self.channel_layer.group_send(
+                f"user_{companion}", 
+                {   
+                    "type": "count_read", 
+                    "payload":payload, 
+                }
+            )
+            return 
+
 
         # провека на содержание сообщения
         if not await self.valid_text_data(type, message_content, pk_attachment) and \
@@ -179,6 +199,10 @@ class GroupConsumer(AsyncWebsocketConsumer):
             )
 
     async def typing_event(self, event):
+        payload = event.get("payload")
+        await self.send(json.dumps(payload))
+
+    async def count_read(self, event):
         payload = event.get("payload")
         await self.send(json.dumps(payload))
 

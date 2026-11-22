@@ -150,8 +150,6 @@ class Message(models.Model):
         ]
 
 
-
-
 class Event(models.Model):
     CHOICES = [
         ("Join", "join"),

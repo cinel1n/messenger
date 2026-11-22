@@ -226,12 +226,36 @@ class ChatView(HomeView):
         member_group = get_object_or_404(GroupMemberModel, group=group, user=self.request.user)
 
         ids_message = [i.id for i in items_chat if i.type_content() == "message"]
+        id_max = None 
         if ids_message:
             id_max = max(ids_message)
             member_group.last_read_message_id = id_max
             member_group.save()
 
+
         context = super().get_context_data(**kwargs)
+        # id последнего сообщения, который прочитал собеседник (для нас)
+        com_last_read_mess_id = None 
+        if group.type == group.GroupType.PRIVATE and id_max is not None:
+            member_group_companion = GroupMemberModel.objects.filter(group=group).exclude(user=self.request.user).first()
+            com_last_read_mess_id = member_group_companion.last_read_message_id
+
+            # отправка websocket сообщения для подсчета сообщений (для собеседника)
+            channel_layer = get_channel_layer()
+            payload = {
+                "group_uuid": str(group.uuid), 
+                "id_message_read": id_max, # id последнео прочитаного нами сообщения для собеседника
+            }
+            async_to_sync(channel_layer.group_send)(
+                f"user_{member_group_companion.user_id}", 
+                {
+                    "type": "count_read", 
+                    "payload": payload, 
+                }
+            )
+
+        context["com_last_read_mess_id"] = com_last_read_mess_id
+
         if items_chat:
             context["next_cursor"] = items_chat[0].timestamp.isoformat()
         else:
@@ -353,7 +377,7 @@ def delete_message_view(request, pk):
             f"user_{id_user}", 
             {
                 "type": "delete_message", 
-                "gpoup_uuid": str(group.uuid), 
+                "group_uuid": str(group.uuid), 
                 "id_message": pk, 
             }
         )
